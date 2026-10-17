@@ -124,17 +124,14 @@ class SideBar(QWidget):
 
 
         # List Area
-        list_name_area_container = QWidget()
+    
+        list_items_container = QWidget()
+        list_items_vbox = QVBoxLayout()
         list_name_hbox = QHBoxLayout()
         list_name_hbox.addWidget(self.my_list_label)
         list_name_hbox.addStretch(1)
         list_name_hbox.addWidget(self.add_new_list_button)
-        list_name_area_container.setLayout(list_name_hbox)
-        sidebar_vbox.addWidget(list_name_area_container)
-
-        # List Area
-        list_items_container = QWidget()
-        list_items_vbox = QVBoxLayout()
+        list_items_vbox.addLayout(list_name_hbox)
         list_items_vbox.addWidget(self.Inbox_button)
         list_items_vbox.addWidget(self.Work_button)
         list_items_vbox.addWidget(self.Study)
@@ -146,17 +143,13 @@ class SideBar(QWidget):
 
 
         # Workspace Area
-        workspace_name_area_container = QWidget()
+        workspace_items_container = QWidget()
         workspace_name_hbox = QHBoxLayout()
         workspace_name_hbox.addWidget(self.Workspace_label)
         workspace_name_hbox.addStretch(1)
         workspace_name_hbox.addWidget(self.add_new_workspace_button)
-        workspace_name_area_container.setLayout(workspace_name_hbox)
-        sidebar_vbox.addWidget(workspace_name_area_container)
-
-        #Workspace Area
-        workspace_items_container = QWidget()
         workspace_items_vbox = QVBoxLayout()
+        workspace_items_vbox.addLayout(workspace_name_hbox)
         workspace_items_vbox.addWidget(self.add_sample_workspace_button_1)
         workspace_items_vbox.addWidget(self.add_sample_workspace_button_2)
         workspace_items_container.setLayout(workspace_items_vbox)
