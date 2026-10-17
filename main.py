@@ -29,6 +29,7 @@ class mainWindow(QMainWindow):
         body_hbox.addWidget(Right_Bar() , 3)
 
         self.resize(1200, 750)
+        self.setMaximumSize(1200, 750)
 
 
 
@@ -120,7 +121,7 @@ class TopBar(QWidget):
             QWidget {
                 background-color: #FFFFFF;
                 color: #292D2B;
-                font-family: Inter;
+                font-family: Nunito Sans;
                 font-size: 15px;
             }
 
@@ -196,7 +197,7 @@ class SideBar(QWidget):
 
 
         # List Area
-        self.my_list_label = QLabel("My List", self)
+        self.my_list_label = QLabel("My Lists", self)
         self.add_new_list_button = QPushButton("+", self)
         self.Inbox_button = QPushButton("Inbox", self)
         self.Work_button = QPushButton("Work", self)
@@ -205,7 +206,7 @@ class SideBar(QWidget):
         self.Holiday_trip_button = QPushButton("Holiday Trip", self)
 
         #Workspace Area
-        self.Workspace_label = QLabel("Workspace", self)
+        self.Workspace_label = QLabel("Workspaces", self)
         self.add_new_workspace_button = QPushButton("+", self)
         self.add_sample_workspace_button_1 = QPushButton("Workspace 1", self)
         self.add_sample_workspace_button_2 = QPushButton("Workspace 2", self)
@@ -298,7 +299,7 @@ class SideBar(QWidget):
             QWidget {
                 background-color: #FFFFFF;
                 color: #292D2B;
-                font-family: Inter;
+                font-family: Manrope;
                 font-size: 15px;
                 border-radius: 12px;
             }
@@ -356,7 +357,7 @@ class Right_Bar(QWidget):
 
 def main():
     app = QApplication([]) 
-    app.setFont(QFont("Inter", 16))                       
+    app.setFont(QFont("Manrope", 16))                       
     window = mainWindow()                        
     window.show()                                 
     app.exec_()                                   
