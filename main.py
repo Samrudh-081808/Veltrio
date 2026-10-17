@@ -1,7 +1,7 @@
 import sys
 from PyQt5.QtWidgets import (QMainWindow, QApplication, QLabel,
                              QWidget, QVBoxLayout, QHBoxLayout,
-                             QGridLayout, QPushButton, QLineEdit)
+                             QButtonGroup, QPushButton, QLineEdit)
 from PyQt5.QtGui import (QIcon, QFont)          
 from PyQt5.QtCore import (Qt)
 
@@ -27,6 +27,9 @@ class mainWindow(QMainWindow):
         body_hbox.addWidget(SideBar() , 1)
         body_hbox.addWidget(Main_Display() , 4)
         body_hbox.addWidget(Right_Bar() , 2)
+
+        self.resize(1200, 750)
+
 
 
 class Header(QWidget):
@@ -79,6 +82,68 @@ class TopBar(QWidget):
         self.notification_panel_open_button.setText("🔔")
         self.profile_icon_button.setText("👤")
 
+        self.applyStyles()
+
+    def applyStyles(self):
+        self.setStyleSheet("""
+            QWidget {
+                background-color: #FFFFFF;
+                color: #292D2B;
+                font-family: Inter;
+                font-size: 14px;
+            }
+
+            QLineEdit {
+                background-color: #F5F5F3;
+                border: 1px solid #E5E9E6;
+                border-radius: 12px;
+                padding: 10px 14px;
+                color: #292D2B;
+                selection-background-color: #168F80;
+            }
+
+            QLineEdit:focus {
+                border: 1px solid #168F80;
+                background-color: #FFFFFF;
+            }
+
+            QPushButton {
+                background-color: #FFFFFF;
+                border: 1px solid #E5E9E6;
+                border-radius: 10px;
+                padding: 9px 12px;
+                color: #292D2B;
+            }
+
+            QPushButton:hover {
+                background-color: #EDF0E7;
+                border-color: #D5DED6;
+            }
+
+            QPushButton:pressed {
+                background-color: #E1E9DF;
+            }
+        """)
+
+        self.export_summary_button.setStyleSheet("""
+            QPushButton {
+                background-color: #168F80;
+                color: #FFFFFF;
+                border: none;
+                border-radius: 10px;
+                padding: 10px 14px;
+                font-weight: 600;
+            }
+
+            QPushButton:hover {
+                background-color: #11796D;
+            }
+
+            QPushButton:pressed {
+                background-color: #0D655C;
+            }
+        """)
+
         
 
 
@@ -91,6 +156,7 @@ class SideBar(QWidget):
         self.Tasks_button = QPushButton("Tasks", self)
         self.Calendar_button = QPushButton("Calendar", self)
         self.Notes_button = QPushButton("Notes", self)
+
 
         # List Area
         self.my_list_label = QLabel("My List", self)
@@ -110,11 +176,14 @@ class SideBar(QWidget):
         
     def initUI(self):
         sidebar_vbox = QVBoxLayout()
+        sidebar_vbox.setSpacing(20)
+        sidebar_vbox.setContentsMargins(12, 16, 12, 16)
         self.setLayout(sidebar_vbox)
 
         #Dashboard and stuff
         Dashboard_container = QWidget()
         dashboard_items_vbox = QVBoxLayout()
+        dashboard_items_vbox.setSpacing(4)
         dashboard_items_vbox.addWidget(self.Dashboard_button)
         dashboard_items_vbox.addWidget(self.Tasks_button)
         dashboard_items_vbox.addWidget(self.Calendar_button)
@@ -127,6 +196,7 @@ class SideBar(QWidget):
     
         list_items_container = QWidget()
         list_items_vbox = QVBoxLayout()
+        list_items_vbox.setSpacing(4)
         list_name_hbox = QHBoxLayout()
         list_name_hbox.addWidget(self.my_list_label)
         list_name_hbox.addStretch(1)
@@ -140,6 +210,8 @@ class SideBar(QWidget):
         list_items_container.setLayout(list_items_vbox)
         sidebar_vbox.addWidget(list_items_container)
 
+        
+
 
 
         # Workspace Area
@@ -149,6 +221,7 @@ class SideBar(QWidget):
         workspace_name_hbox.addStretch(1)
         workspace_name_hbox.addWidget(self.add_new_workspace_button)
         workspace_items_vbox = QVBoxLayout()
+        workspace_items_vbox.setSpacing(4)
         workspace_items_vbox.addLayout(workspace_name_hbox)
         workspace_items_vbox.addWidget(self.add_sample_workspace_button_1)
         workspace_items_vbox.addWidget(self.add_sample_workspace_button_2)
@@ -157,9 +230,68 @@ class SideBar(QWidget):
 
 
 
-        sidebar_vbox.addStretch(1)  # Add stretch to push the buttons to the top
-        
+        sidebar_vbox.addStretch(1)
+        # Navigation selection
+        nav_buttons = [
+            self.Dashboard_button,
+            self.Tasks_button,
+            self.Calendar_button,
+            self.Notes_button,
+            self.Inbox_button,
+            self.Work_button,
+            self.Study,
+            self.Health,
+            self.Holiday_trip_button,
+            self.add_sample_workspace_button_1,
+            self.add_sample_workspace_button_2
+        ]
 
+        self.nav_group = QButtonGroup(self)
+        self.nav_group.setExclusive(True)
+
+        for button in nav_buttons:
+            button.setCheckable(True)
+            self.nav_group.addButton(button)
+
+
+        self.applyStyles()
+
+    def applyStyles(self):
+        self.setStyleSheet("""
+            QWidget {
+                background-color: #FFFFFF;
+                color: #292D2B;
+                font-family: Inter;
+                font-size: 14px;
+                border-radius: 9px;
+            }
+
+            QPushButton {
+                background-color: transparent;
+                border: none;
+                border-radius: 9px;
+                padding: 9px 12px;
+                text-align: left;
+            }
+
+            QPushButton:hover {
+                background-color: #EDF0E7;
+            }
+
+            QPushButton:checked {
+                background-color: #EDF0E7;
+                color: #168F80;
+                font-weight: 600;
+            }
+
+            QPushButton:hover:!checked {
+                background-color: #EDF0E7;
+            }
+
+            QLabel {
+                color: #777D79;
+            }
+        """)
 
 
 
@@ -185,7 +317,8 @@ class Right_Bar(QWidget):
         self.setLayout(right_bar_vbox)
 
 def main():
-    app = QApplication([])                        
+    app = QApplication([]) 
+    app.setFont(QFont("Inter", 14))                       
     window = mainWindow()                        
     window.show()                                 
     app.exec_()                                   
