@@ -2,12 +2,41 @@ import sys
 from PyQt5.QtWidgets import (QMainWindow, QApplication, QLabel,
                              QWidget, QVBoxLayout, QHBoxLayout,
                              QButtonGroup, QPushButton, QLineEdit)
-from PyQt5.QtGui import (QIcon, QFont, QPixmap)          
+from PyQt5.QtGui import (QIcon, QFont, QPixmap, QImage, QFontDatabase)
 from PyQt5.QtCore import (Qt)
+from PyQt5.QtWidgets import QGraphicsDropShadowEffect
+from PyQt5.QtGui import QColor
+from pathlib import Path
+
+SIDEBAR_W = 240
+HEADER_H = 64
+LOGO_PATH = Path(__file__).parent / "Resources" / "Images_" / "Veltrio Teal Ribbon Logo.png"  # adjust to your tree
+FONT_DIR = Path(__file__).parent / "Resources" / "Fonts" / "Amaranth,Nunito,Signika_Negative" / "Nunito" / "static"
+FONT_FAMILY = "Nunito"
+
+
+def add_card_shadow(widget):
+    shadow = QGraphicsDropShadowEffect(widget)
+    shadow.setBlurRadius(10)
+    shadow.setOffset(0, 2)
+    shadow.setColor(QColor(0, 0, 0, 30))   # about 12% black, keep it faint
+    widget.setGraphicsEffect(shadow)
+
+def add_control_shadow(widget):
+    shadow = QGraphicsDropShadowEffect(widget)
+    shadow.setBlurRadius(8)
+    shadow.setOffset(0, 1)
+    shadow.setColor(QColor(0, 0, 0, 22))   # fainter than the cards
+    widget.setGraphicsEffect(shadow)
+
+def load_fonts():
+    # registers the bundled Nunito files so the font works on any machine
+    for ttf in FONT_DIR.glob("*.ttf"):
+        QFontDatabase.addApplicationFont(str(ttf))
 
 
 
-class mainWindow(QMainWindow):                                 
+class mainWindow(QMainWindow):
 
     def __init__(self):
         super().__init__()
@@ -15,7 +44,9 @@ class mainWindow(QMainWindow):
         self.initUI()
 
     def initUI(self):
+        self.setStyleSheet("QMainWindow { background-color: #F5F5F3; }")
         central_widget = QWidget(self)
+        central_widget.setStyleSheet("background-color: #F5F5F3;")
         self.setCentralWidget(central_widget)
 
         main_vbox = QVBoxLayout()
@@ -37,53 +68,86 @@ class Header(QWidget):
 
     def __init__(self):
         super().__init__()
-        self.initUI()
-
-    def initUI(self):
-        header_hbox = QHBoxLayout()
-        self.setLayout(header_hbox)
-        header_hbox.addWidget(Brand() , 2) 
-        header_hbox.addWidget(TopBar() , 9)
+        header_hbox = QHBoxLayout(self)
+        header_hbox.setContentsMargins(0, 0, 0, 0)
+        header_hbox.setSpacing(16)
+        self.setFixedHeight(HEADER_H)
+        header_hbox.addWidget(Brand())
+        header_hbox.addWidget(TopBar(), 1)
 
 
 class Brand(QWidget):
 
+    LOGO_MAX_W = 128
+    LOGO_MAX_H = 36
+
     def __init__(self):
         super().__init__()
-        # self.app_name_label = QLabel("Veltrio", self)
-        self.app_logo_label = QLabel(self)
-        self.initUI()
+        self.setFixedWidth(SIDEBAR_W)
 
-    def initUI(self):
-        app_details_hbox = QHBoxLayout()
-        self.setLayout(app_details_hbox)
-        app_details_hbox.addWidget(self.app_logo_label)
-        # app_details_hbox.addWidget(self.app_name_label)
-        logo = QPixmap(
-            "Projects/Resources/Images_/Veltrio Teal Ribbon Logo.png"
-        )
-        self.app_logo_label.setPixmap(
-            logo.scaled(
-                100, 100,
-                Qt.KeepAspectRatio,
-                Qt.SmoothTransformation
-            )
-        )
-        # self.app_name_label.setFont(QFont("Inter", 20, QFont.DemiBold))
-        # self.app_name_label.setStyleSheet("color: #292D2B;")    
-        # self.app_logo_label.setFixedSize(100, 100)
-        self.app_logo_label.setAlignment(Qt.AlignBottom)
-        self.app_logo_label.setStyleSheet("""
-            background-color: transparent;
-            border: none;
-        """)
+        outer = QHBoxLayout(self)
+        outer.setContentsMargins(12, 4, 12, 4)
 
-        # self.app_name_label.setStyleSheet("""
-        #     background-color: transparent;
-        #     border: none;
-        #     color: #292D2B;
-        #     font-size: 24px;
-        # """)
+        card = QWidget()
+        card.setObjectName("BrandCard")
+        card.setAttribute(Qt.WA_StyledBackground, True)
+        card.setStyleSheet("#BrandCard { background-color: #F5F5F3; border-radius: 12px; }")
+        outer.addWidget(card)
+
+        inner = QHBoxLayout(card)
+        inner.setContentsMargins(16, 0, 16, 0)
+        self.app_logo_label = QLabel()
+        self.app_logo_label.setAlignment(Qt.AlignCenter)
+        inner.addWidget(self.app_logo_label)
+
+        self._load_logo()
+
+    @staticmethod
+    def _trim(pm, tol=250):
+        """Crop the white/transparent padding baked into the PNG."""
+        img = pm.toImage()
+        w, h = img.width(), img.height()
+
+        def is_bg(x, y):
+            c = img.pixelColor(x, y)
+            return c.alpha() < 10 or (c.red() > tol and c.green() > tol and c.blue() > tol)
+
+        def row_empty(y):
+            return all(is_bg(x, y) for x in range(w))
+
+        def col_empty(x, t, b):
+            return all(is_bg(x, y) for y in range(t, b + 1))
+
+        top = 0
+        while top < h and row_empty(top):
+            top += 1
+        if top == h:
+            return pm
+        bottom = h - 1
+        while row_empty(bottom):
+            bottom -= 1
+        left = 0
+        while col_empty(left, top, bottom):
+            left += 1
+        right = w - 1
+        while col_empty(right, top, bottom):
+            right -= 1
+        return pm.copy(left, top, right - left + 1, bottom - top + 1)
+
+    def _load_logo(self):
+        pm = QPixmap(str(LOGO_PATH))
+        if pm.isNull():
+            self.app_logo_label.setText("Veltrio")
+            self.app_logo_label.setStyleSheet("font-size: 20px; font-weight: 700; color: #168F80;")
+            return
+        pm = self._trim(pm)
+        dpr = self.devicePixelRatioF()
+        scaled = pm.scaled(
+            int(self.LOGO_MAX_W * dpr), int(self.LOGO_MAX_H * dpr),
+            Qt.KeepAspectRatio, Qt.SmoothTransformation
+        )
+        scaled.setDevicePixelRatio(dpr)
+        self.app_logo_label.setPixmap(scaled)
 
 
 class TopBar(QWidget):
@@ -96,7 +160,7 @@ class TopBar(QWidget):
         self.notification_panel_open_button = QPushButton(self)
         self.profile_icon_button = QPushButton(self)
         self.initUI()
-        
+
     def initUI(self):
         topbar_hbox = QHBoxLayout()
         self.setLayout(topbar_hbox)
@@ -114,15 +178,21 @@ class TopBar(QWidget):
         self.profile_icon_button.setText("👤")
 
         self.applyStyles()
+        for w in (self.search_field,
+          self.export_summary_button,
+          self.timer_open_button,
+          self.notification_panel_open_button,
+          self.profile_icon_button):
+          add_control_shadow(w)
 
     def applyStyles(self):
-        
+
         self.setStyleSheet("""
             QWidget {
                 background-color: #FFFFFF;
-                color: #292D2B;
-                font-family: Nunito Sans;
-                font-size: 15px;
+                color: #1F2421;
+                font-family: Nunito;
+                font-size: 14px;
             }
 
             QLineEdit {
@@ -131,7 +201,8 @@ class TopBar(QWidget):
                 border-radius: 14px;
                 padding: 12px 16px;
                 min-height: 22px;
-                color: #292D2B;
+                color: #1F2421;
+                font-size: 14px;
                 selection-background-color: #168F80;
             }
 
@@ -146,12 +217,12 @@ class TopBar(QWidget):
                 border-radius: 12px;
                 padding: 11px 16px;
                 min-height: 22px;
-                color: #292D2B;
-                font-size: 15px;
+                color: #1F2421;
+                font-size: 14px;
             }
 
             QPushButton:hover {
-                background-color: #EDF0E7;
+                background-color: #F1F3EE;
                 border-color: #D5DED6;
             }
 
@@ -162,33 +233,34 @@ class TopBar(QWidget):
 
         self.export_summary_button.setStyleSheet("""
             QPushButton {
-                background-color: #168F80;
+                background-color: #11796D;
                 color: #FFFFFF;
                 border: none;
                 border-radius: 12px;
                 padding: 12px 18px;
                 min-height: 22px;
-                font-size: 15px;
+                font-size: 14px;
                 font-weight: 600;
             }
 
             QPushButton:hover {
-                background-color: #11796D;
+                background-color: #0F6A60;
             }
 
             QPushButton:pressed {
-                background-color: #0D655C;
+                background-color: #0D5B52;
             }
         """)
 
 
-        
+
 
 
 class SideBar(QWidget):
 
     def __init__(self):
         super().__init__()
+        self.setFixedWidth(SIDEBAR_W)
         # Dashboard and stuff
         self.Dashboard_button = QPushButton("Dashboard", self)
         self.Tasks_button = QPushButton("Tasks", self)
@@ -211,7 +283,7 @@ class SideBar(QWidget):
         self.add_sample_workspace_button_1 = QPushButton("Workspace 1", self)
         self.add_sample_workspace_button_2 = QPushButton("Workspace 2", self)
         self.initUI()
-        
+
     def initUI(self):
         sidebar_vbox = QVBoxLayout()
         sidebar_vbox.setSpacing(20)
@@ -231,7 +303,7 @@ class SideBar(QWidget):
 
 
         # List Area
-    
+
         list_items_container = QWidget()
         list_items_vbox = QVBoxLayout()
         list_items_vbox.setSpacing(4)
@@ -248,7 +320,7 @@ class SideBar(QWidget):
         list_items_container.setLayout(list_items_vbox)
         sidebar_vbox.addWidget(list_items_container)
 
-        
+
 
 
 
@@ -266,10 +338,12 @@ class SideBar(QWidget):
         workspace_items_container.setLayout(workspace_items_vbox)
         sidebar_vbox.addWidget(workspace_items_container)
 
-
+        add_card_shadow(Dashboard_container)
+        add_card_shadow(list_items_container)
+        add_card_shadow(workspace_items_container)
 
         sidebar_vbox.addStretch(1)
-        # Navigation selection
+        
         nav_buttons = [
             self.Dashboard_button,
             self.Tasks_button,
@@ -290,6 +364,7 @@ class SideBar(QWidget):
         for button in nav_buttons:
             button.setCheckable(True)
             self.nav_group.addButton(button)
+        self.Dashboard_button.setChecked(True)
 
 
         self.applyStyles()
@@ -298,37 +373,39 @@ class SideBar(QWidget):
         self.setStyleSheet("""
             QWidget {
                 background-color: #FFFFFF;
-                color: #292D2B;
-                font-family: Manrope;
-                font-size: 15px;
+                color: #1F2421;
+                font-family: Nunito;
+                font-size: 14px;
                 border-radius: 12px;
             }
 
             QPushButton {
                 background-color: transparent;
-                color: #292D2B;
+                color: #1F2421;
                 border: none;
                 border-radius: 10px;
                 padding: 12px 15px;
                 min-height: 22px;
                 text-align: left;
-                font-size: 15px;
+                font-size: 14px;
+                font-weight: 500;
             }
 
             QPushButton:hover {
-                background-color: #EDF0E7;
+                background-color: #F1F3EE;
             }
 
             QPushButton:checked {
-                background-color: #EDF0E7;
-                color: #168F80;
+                background-color: #E3F1EE;
+                color: #0D6B60;
                 font-weight: 600;
             }
 
             QLabel {
                 background-color: transparent;
-                color: #777D79;
-                font-size: 16px;
+                color: #5F6561;
+                font-size: 12px;
+                font-weight: 600;
             }
         """)
 
@@ -340,7 +417,7 @@ class Main_Display(QWidget):
     def __init__(self):
         super().__init__()
         self.initUI()
-        
+
     def initUI(self):
         main_display_vbox = QVBoxLayout()
         self.setLayout(main_display_vbox)
@@ -356,12 +433,14 @@ class Right_Bar(QWidget):
         self.setLayout(right_bar_vbox)
 
 def main():
-    app = QApplication([]) 
-    app.setFont(QFont("Manrope", 16))                       
-    window = mainWindow()                        
-    window.show()                                 
-    app.exec_()                                   
-    
+    app = QApplication([])
+    load_fonts()                                   
+    font = QFont(FONT_FAMILY)
+    font.setPixelSize(14)
+    app.setFont(font)
+    window = mainWindow()
+    window.show()
+    app.exec_()
+
 if __name__ == "__main__":
     main()
-
