@@ -6,6 +6,7 @@ from PyQt5.QtGui import (QIcon, QFont, QPixmap, QImage, QFontDatabase)
 from PyQt5.QtCore import (Qt)
 from PyQt5.QtWidgets import QGraphicsDropShadowEffect
 from PyQt5.QtGui import QColor
+from PyQt5.QtCore import QSettings
 from pathlib import Path
 
 SIDEBAR_W = 240
@@ -19,18 +20,17 @@ def add_card_shadow(widget):
     shadow = QGraphicsDropShadowEffect(widget)
     shadow.setBlurRadius(10)
     shadow.setOffset(0, 2)
-    shadow.setColor(QColor(0, 0, 0, 30))   # about 12% black, keep it faint
+    shadow.setColor(QColor(0, 0, 0, 30))   
     widget.setGraphicsEffect(shadow)
 
 def add_control_shadow(widget):
     shadow = QGraphicsDropShadowEffect(widget)
     shadow.setBlurRadius(8)
     shadow.setOffset(0, 1)
-    shadow.setColor(QColor(0, 0, 0, 22))   # fainter than the cards
+    shadow.setColor(QColor(0, 0, 0, 22))   
     widget.setGraphicsEffect(shadow)
 
 def load_fonts():
-    # registers the bundled Nunito files so the font works on any machine
     for ttf in FONT_DIR.glob("*.ttf"):
         QFontDatabase.addApplicationFont(str(ttf))
 
@@ -60,7 +60,7 @@ class mainWindow(QMainWindow):
         body_hbox.addWidget(Right_Bar() , 3)
 
         self.resize(1200, 750)
-        self.setMaximumSize(1200, 750)
+        # self.setMaximumSize(1200, 750)
 
 
 
