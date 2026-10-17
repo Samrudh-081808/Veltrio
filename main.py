@@ -2,7 +2,7 @@ import sys
 from PyQt5.QtWidgets import (QMainWindow, QApplication, QLabel,
                              QWidget, QVBoxLayout, QHBoxLayout,
                              QButtonGroup, QPushButton, QLineEdit)
-from PyQt5.QtGui import (QIcon, QFont)          
+from PyQt5.QtGui import (QIcon, QFont, QPixmap)          
 from PyQt5.QtCore import (Qt)
 
 
@@ -24,9 +24,9 @@ class mainWindow(QMainWindow):
         body_hbox = QHBoxLayout()
         main_vbox.addWidget(Header() , 0)
         main_vbox.addLayout(body_hbox , 1)
-        body_hbox.addWidget(SideBar() , 1)
-        body_hbox.addWidget(Main_Display() , 4)
-        body_hbox.addWidget(Right_Bar() , 2)
+        body_hbox.addWidget(SideBar() , 2)
+        body_hbox.addWidget(Main_Display() , 6)
+        body_hbox.addWidget(Right_Bar() , 3)
 
         self.resize(1200, 750)
 
@@ -41,18 +41,48 @@ class Header(QWidget):
     def initUI(self):
         header_hbox = QHBoxLayout()
         self.setLayout(header_hbox)
-        header_hbox.addWidget(Brand()) 
-        header_hbox.addWidget(TopBar())
+        header_hbox.addWidget(Brand() , 2) 
+        header_hbox.addWidget(TopBar() , 9)
 
 
 class Brand(QWidget):
 
     def __init__(self):
         super().__init__()
+        # self.app_name_label = QLabel("Veltrio", self)
+        self.app_logo_label = QLabel(self)
         self.initUI()
 
     def initUI(self):
-        pass
+        app_details_hbox = QHBoxLayout()
+        self.setLayout(app_details_hbox)
+        app_details_hbox.addWidget(self.app_logo_label)
+        # app_details_hbox.addWidget(self.app_name_label)
+        logo = QPixmap(
+            "Projects/Resources/Images_/Veltrio Teal Ribbon Logo.png"
+        )
+        self.app_logo_label.setPixmap(
+            logo.scaled(
+                100, 100,
+                Qt.KeepAspectRatio,
+                Qt.SmoothTransformation
+            )
+        )
+        # self.app_name_label.setFont(QFont("Inter", 20, QFont.DemiBold))
+        # self.app_name_label.setStyleSheet("color: #292D2B;")    
+        # self.app_logo_label.setFixedSize(100, 100)
+        self.app_logo_label.setAlignment(Qt.AlignBottom)
+        self.app_logo_label.setStyleSheet("""
+            background-color: transparent;
+            border: none;
+        """)
+
+        # self.app_name_label.setStyleSheet("""
+        #     background-color: transparent;
+        #     border: none;
+        #     color: #292D2B;
+        #     font-size: 24px;
+        # """)
 
 
 class TopBar(QWidget):
@@ -85,19 +115,21 @@ class TopBar(QWidget):
         self.applyStyles()
 
     def applyStyles(self):
+        
         self.setStyleSheet("""
             QWidget {
                 background-color: #FFFFFF;
                 color: #292D2B;
                 font-family: Inter;
-                font-size: 14px;
+                font-size: 15px;
             }
 
             QLineEdit {
                 background-color: #F5F5F3;
                 border: 1px solid #E5E9E6;
-                border-radius: 12px;
-                padding: 10px 14px;
+                border-radius: 14px;
+                padding: 12px 16px;
+                min-height: 22px;
                 color: #292D2B;
                 selection-background-color: #168F80;
             }
@@ -110,9 +142,11 @@ class TopBar(QWidget):
             QPushButton {
                 background-color: #FFFFFF;
                 border: 1px solid #E5E9E6;
-                border-radius: 10px;
-                padding: 9px 12px;
+                border-radius: 12px;
+                padding: 11px 16px;
+                min-height: 22px;
                 color: #292D2B;
+                font-size: 15px;
             }
 
             QPushButton:hover {
@@ -130,8 +164,10 @@ class TopBar(QWidget):
                 background-color: #168F80;
                 color: #FFFFFF;
                 border: none;
-                border-radius: 10px;
-                padding: 10px 14px;
+                border-radius: 12px;
+                padding: 12px 18px;
+                min-height: 22px;
+                font-size: 15px;
                 font-weight: 600;
             }
 
@@ -143,6 +179,7 @@ class TopBar(QWidget):
                 background-color: #0D655C;
             }
         """)
+
 
         
 
@@ -262,16 +299,19 @@ class SideBar(QWidget):
                 background-color: #FFFFFF;
                 color: #292D2B;
                 font-family: Inter;
-                font-size: 14px;
-                border-radius: 9px;
+                font-size: 15px;
+                border-radius: 12px;
             }
 
             QPushButton {
                 background-color: transparent;
+                color: #292D2B;
                 border: none;
-                border-radius: 9px;
-                padding: 9px 12px;
+                border-radius: 10px;
+                padding: 12px 15px;
+                min-height: 22px;
                 text-align: left;
+                font-size: 15px;
             }
 
             QPushButton:hover {
@@ -284,12 +324,10 @@ class SideBar(QWidget):
                 font-weight: 600;
             }
 
-            QPushButton:hover:!checked {
-                background-color: #EDF0E7;
-            }
-
             QLabel {
+                background-color: transparent;
                 color: #777D79;
+                font-size: 16px;
             }
         """)
 
@@ -318,7 +356,7 @@ class Right_Bar(QWidget):
 
 def main():
     app = QApplication([]) 
-    app.setFont(QFont("Inter", 14))                       
+    app.setFont(QFont("Inter", 16))                       
     window = mainWindow()                        
     window.show()                                 
     app.exec_()                                   

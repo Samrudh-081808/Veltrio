@@ -1,0 +1,1 @@
+        # self.app_logo_label.setFixedSize(100, 100)
