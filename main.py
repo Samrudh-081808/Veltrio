@@ -8,12 +8,14 @@ from PyQt5.QtWidgets import QGraphicsDropShadowEffect
 from PyQt5.QtGui import QColor
 from PyQt5.QtCore import QSettings
 from pathlib import Path
+from PyQt5.QtWidgets import QSizePolicy
 
 SIDEBAR_W = 240
 HEADER_H = 64
 LOGO_PATH = Path(__file__).parent / "Resources" / "Images_" / "Veltrio Teal Ribbon Logo.png"  # adjust to your tree
 FONT_DIR = Path(__file__).parent / "Resources" / "Fonts" / "Amaranth,Nunito,Signika_Negative" / "Nunito" / "static"
 FONT_FAMILY = "Nunito"
+LANDSCAPE_PATH = Path(__file__).parent / "Resources" / "Images_" / "Pastel Mint Landscape with Lake and Birds.png"
 
 
 def add_card_shadow(widget):
@@ -156,7 +158,7 @@ class TopBar(QWidget):
         super().__init__()
         self.search_field = QLineEdit(self)
         self.export_summary_button = QPushButton(self)
-        self.timer_open_button = QPushButton(self)
+        self.switch_light_modes = QPushButton(self)
         self.notification_panel_open_button = QPushButton(self)
         self.profile_icon_button = QPushButton(self)
         self.initUI()
@@ -167,20 +169,20 @@ class TopBar(QWidget):
 
         topbar_hbox.addWidget(self.search_field)
         topbar_hbox.addWidget(self.export_summary_button)
-        topbar_hbox.addWidget(self.timer_open_button)
+        topbar_hbox.addWidget(self.switch_light_modes)
         topbar_hbox.addWidget(self.notification_panel_open_button)
         topbar_hbox.addWidget(self.profile_icon_button)
 
         self.search_field.setPlaceholderText("Search task")
         self.export_summary_button.setText("📂 Export Summary")
-        self.timer_open_button.setText("🕛")
+        self.switch_light_modes.setText("🌗")
         self.notification_panel_open_button.setText("🔔")
         self.profile_icon_button.setText("👤")
 
         self.applyStyles()
         for w in (self.search_field,
           self.export_summary_button,
-          self.timer_open_button,
+          self.switch_light_modes,
           self.notification_panel_open_button,
           self.profile_icon_button):
           add_control_shadow(w)
@@ -416,11 +418,162 @@ class Main_Display(QWidget):
 
     def __init__(self):
         super().__init__()
+        self.top_widget = QWidget()
+        self.greeting_widget = QWidget()
+        self.greeting_label = QLabel("Good Morning, Rudy")
+        self.no_of_tasks_label = QLabel("You have 5 tasks today.")
+
+        self.up_next_widget = QWidget()
+        self.up_next_label = QLabel("Up Next")
+        self.task_widget_1 = QWidget()
+        self.task_name_1 = QLabel("Task Name Placeholder")
+        self.task_time_1 = QLabel("Task Time Placeholder")
+        
+        self.task_widget_2 = QWidget()
+        self.task_name_2 = QLabel("Task Name Placeholder")
+        self.task_time_2 = QLabel("Task Time Placeholder")
+
+        
+
+        self.middle_widget = QWidget()
+        self.bottom_widget = QWidget()
         self.initUI()
 
     def initUI(self):
         main_display_vbox = QVBoxLayout()
         self.setLayout(main_display_vbox)
+        main_display_vbox.addWidget(self.top_widget, 4)
+        main_display_vbox.addWidget(self.middle_widget, 1)
+        main_display_vbox.addWidget(self.bottom_widget, 3)
+
+        topwidget_hbox = QHBoxLayout()
+        self.top_widget.setLayout(topwidget_hbox)
+
+        greeting_vbox = QVBoxLayout()
+        greeting_vbox.setAlignment(Qt.AlignTop)
+        greeting_vbox.addWidget(self.greeting_label)
+        greeting_vbox.addWidget(self.no_of_tasks_label)
+        self.greeting_widget.setLayout(greeting_vbox)
+
+        up_next_vbox = QVBoxLayout()
+        task_1_vbox = QVBoxLayout(self.task_widget_1)
+        task_1_vbox.addWidget(self.task_name_1)
+        task_1_vbox.addWidget(self.task_time_1)
+
+        task_2_vbox = QVBoxLayout(self.task_widget_2)
+        task_2_vbox.addWidget(self.task_name_2)
+        task_2_vbox.addWidget(self.task_time_2)
+        up_next_vbox.setContentsMargins(10, 10, 10, 10)
+        up_next_vbox.setSpacing(12)
+        up_next_vbox.addWidget(self.up_next_label)
+        up_next_vbox.addWidget(self.task_widget_1)
+        up_next_vbox.addWidget(self.task_widget_2)
+        up_next_vbox.addStretch(1)
+        self.up_next_widget.setLayout(up_next_vbox)
+
+        self.task_widget_1.setSizePolicy(
+            QSizePolicy.Expanding, QSizePolicy.Fixed
+        )
+        self.task_widget_2.setSizePolicy(
+            QSizePolicy.Expanding, QSizePolicy.Fixed
+        )
+
+        self.task_widget_1.setFixedHeight(75)
+        self.task_widget_2.setFixedHeight(75)
+
+        topwidget_hbox.addWidget(self.greeting_widget , 3)
+        topwidget_hbox.addWidget(self.up_next_widget, 2 , alignment=Qt.AlignBottom)
+
+        self.applyStyles()
+
+
+    
+    def applyStyles(self):
+        self.top_widget.setStyleSheet("""
+            QWidget {
+                background-color: #E3F1EE;
+                border-radius: 20px;
+            }
+
+            QWidget#GreetingCard {
+                background-color: #E3F1EE;
+                border-radius: 20px;
+            }
+        """)
+
+        self.greeting_label.setStyleSheet("""
+            QLabel {
+                color: #1F2421;
+                font-family: Nunito;
+                font-size: 26px;
+                font-weight: 800;
+                background-color: transparent;
+                border: none;
+            }
+        """)
+
+        self.no_of_tasks_label.setStyleSheet("""
+            QLabel {
+                color: #5F6561;
+                font-family: Nunito;
+                font-size: 13px;
+                background-color: transparent;
+                border: none;
+            }
+        """)
+        self.up_next_widget.setStyleSheet("""
+            QWidget {
+                background-color: white;
+                border: 1px solid #E5E9E6;
+                border-radius: 18px;
+            }
+        """)
+
+        self.up_next_label.setStyleSheet("""
+            font-family: Nunito;
+            font-size: 18px;
+            font-weight: 800;
+            color: #1F2421;
+            background: transparent;
+            border: none;
+        """)
+
+        for task_widget in [self.task_widget_1, self.task_widget_2]:
+            task_widget.setStyleSheet("""
+                QWidget {
+                    background-color: transparent;
+                    border: none;
+                    border-left: 4px solid #168F80;
+                    border-radius: 1px;
+                }
+        """)
+        self.task_name_1.setStyleSheet("""
+            QLabel {
+                border: none;
+                background: transparent;
+            }
+        """)
+
+        self.task_name_2.setStyleSheet("""
+            QLabel {
+                border: none;
+                background: transparent;
+            }
+        """)
+
+        self.task_time_2.setStyleSheet("""
+            QLabel {
+                border: none;
+                background: transparent;
+            }
+        """)
+
+        self.task_time_1.setStyleSheet("""
+            QLabel {
+                border: none;
+                background: transparent;
+            }
+        """)
 
 
 class Right_Bar(QWidget):
