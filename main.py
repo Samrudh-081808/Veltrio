@@ -1,24 +1,46 @@
+# Import necessary modules
 import sys
-from PyQt5.QtWidgets import (QMainWindow, QApplication, QLabel,
-                             QWidget, QVBoxLayout, QHBoxLayout,
-                             QButtonGroup, QPushButton, QLineEdit,
-                             QCheckBox)
-from PyQt5.QtGui import (QIcon, QFont, QPixmap, QImage, QFontDatabase)
-from PyQt5.QtCore import (Qt)
-from PyQt5.QtWidgets import QGraphicsDropShadowEffect
-from PyQt5.QtGui import QColor
-from PyQt5.QtCore import QSettings
 from pathlib import Path
-from PyQt5.QtWidgets import QSizePolicy
 
+from PyQt5.QtCore import Qt, QSettings
+
+from PyQt5.QtGui import (
+    QIcon,
+    QFont,
+    QPixmap,
+    QImage,
+    QFontDatabase,
+    QColor,
+)
+
+from PyQt5.QtWidgets import (
+    QApplication,
+    QMainWindow,
+    QWidget,
+    QLabel,
+    QVBoxLayout,
+    QHBoxLayout,
+    QButtonGroup,
+    QPushButton,
+    QLineEdit,
+    QCheckBox,
+    QGraphicsDropShadowEffect,
+    QSizePolicy,
+)
+
+# UI dimensions
 SIDEBAR_W = 240
 HEADER_H = 64
-LOGO_PATH = Path(__file__).parent / "Resources" / "Images_" / "Veltrio Teal Ribbon Logo.png"  # adjust to your tree
-FONT_DIR = Path(__file__).parent / "Resources" / "Fonts" / "Amaranth,Nunito,Signika_Negative" / "Nunito" / "static"
-FONT_FAMILY = "Nunito"
+
+# Resource paths
+LOGO_PATH = Path(__file__).parent / "Resources" / "Images_" / "Veltrio Teal Ribbon Logo.png"
 LANDSCAPE_PATH = Path(__file__).parent / "Resources" / "Images_" / "Pastel Mint Landscape with Lake and Birds.png"
+FONT_DIR = Path(__file__).parent / "Resources" / "Fonts" / "Amaranth,Nunito,Signika_Negative" / "Nunito" / "static"
 
+# Font configuration
+FONT_FAMILY = "Nunito"
 
+# UI Effects and Styles
 def add_card_shadow(widget):
     shadow = QGraphicsDropShadowEffect(widget)
     shadow.setBlurRadius(10)
@@ -33,23 +55,31 @@ def add_control_shadow(widget):
     shadow.setColor(QColor(0, 0, 0, 22))   
     widget.setGraphicsEffect(shadow)
 
+# Font loading 
 def load_fonts():
     for ttf in FONT_DIR.glob("*.ttf"):
         QFontDatabase.addApplicationFont(str(ttf))
 
 
-
+# Main application window
 class mainWindow(QMainWindow):
 
     def __init__(self):
         super().__init__()
+
+        # Configure the application window
         self.setWindowTitle("Veltrio")
         icon_path = Path(__file__).parent / "Resources" / "Images_" / "veltrio.ico"
         self.setWindowIcon(QIcon(str(icon_path)))
+
         self.initUI()
 
+
     def initUI(self):
+        # Set up the main window background
         self.setStyleSheet("QMainWindow { background-color: #F5F5F3; }")
+
+        # Create the central widget and main vertical layout
         central_widget = QWidget(self)
         central_widget.setStyleSheet("background-color: #F5F5F3;")
         self.setCentralWidget(central_widget)
@@ -57,16 +87,21 @@ class mainWindow(QMainWindow):
         main_vbox = QVBoxLayout()
         central_widget.setLayout(main_vbox)
 
+        # Arrange the header and main content horizontally
         body_hbox = QHBoxLayout()
-        main_vbox.addWidget(Header() , 0)
-        main_vbox.addLayout(body_hbox , 1)
-        body_hbox.addWidget(SideBar() , 2)
-        body_hbox.addWidget(Main_Display() , 6)
-        body_hbox.addWidget(Right_Bar() , 3)
+        main_vbox.addWidget(Header(), 0)
+        main_vbox.addLayout(body_hbox, 1)
 
+        # Add the sidebar, main display, and right sidebar
+        body_hbox.addWidget(SideBar(), 2)
+        body_hbox.addWidget(Main_Display(), 6)
+        body_hbox.addWidget(Right_Bar(), 3)
+
+        # Set the initial window dimensions
         self.resize(1200, 750)
-        # self.setMaximumSize(1200, 750)
 
+        # Optional: enforce a maximum window size
+        # self.setMaximumSize(1200, 750)
 
 
 class Header(QWidget):
