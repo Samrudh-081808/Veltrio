@@ -2,7 +2,11 @@
 import sys
 from pathlib import Path
 
-from PyQt5.QtCore import Qt, QSettings
+from PyQt5.QtCore import (Qt,
+    QSettings,
+    QDate,
+    Qt,
+)
 
 from PyQt5.QtGui import (
     QIcon,
@@ -11,6 +15,8 @@ from PyQt5.QtGui import (
     QImage,
     QFontDatabase,
     QColor,
+    QTextCharFormat, 
+    QBrush 
 )
 
 from PyQt5.QtWidgets import (
@@ -26,7 +32,13 @@ from PyQt5.QtWidgets import (
     QCheckBox,
     QGraphicsDropShadowEffect,
     QSizePolicy,
+    QCalendarWidget,
+    QToolButton 
 )
+from PyQt5.QtWidgets import QTableView, QStyledItemDelegate
+from PyQt5.QtCore import QRectF
+from PyQt5.QtGui import QPainter
+from PyQt5.QtWidgets import QStyle
 
 # UI dimensions
 SIDEBAR_W = 240
@@ -98,10 +110,11 @@ class mainWindow(QMainWindow):
         body_hbox.addWidget(Right_Bar(), 3)
 
         # Set the initial window dimensions
-        self.resize(1200, 750)
+        self.resize(1200, 1000)
 
-        # Optional: enforce a maximum window size
+        # Optional: enforce a maximum or minimum window size
         # self.setMaximumSize(1200, 750)
+        self.setMinimumSize(1400, 1000)
 
 
 class Header(QWidget):
@@ -923,6 +936,30 @@ class Main_Display(QWidget):
             """)
 
 
+class CalendarDateDelegate(QStyledItemDelegate):              # dunno how this works i js wanted to fic the calendar selected cell not rendering rounded corners so i just copied this and it works
+    def paint(self, painter, option, index):
+        painter.save()
+
+        if option.state & QStyle.State_Selected:
+            painter.setRenderHint(QPainter.Antialiasing)
+            rect = QRectF(option.rect).adjusted(3, 3, -3, -3)
+
+            painter.setPen(Qt.NoPen)
+            painter.setBrush(QColor("#168F80"))
+            painter.drawRoundedRect(rect, 7, 7)
+
+            painter.setPen(QColor("#FFFFFF"))
+            painter.drawText(
+                option.rect,
+                Qt.AlignCenter,
+                str(index.data())
+            )
+        else:
+            super().paint(painter, option, index)
+
+        painter.restore()
+
+
 class Right_Bar(QWidget):
     def __init__(self):
         super().__init__()
@@ -931,6 +968,333 @@ class Right_Bar(QWidget):
     def initUI(self):
         right_bar_vbox = QVBoxLayout()
         self.setLayout(right_bar_vbox)
+
+        # Object name so the card style does NOT cascade onto the calendar's children
+        self.calendar_container = QWidget()
+        self.calendar_container.setObjectName("CalendarCard")
+        self.calendar_container.setAttribute(Qt.WA_StyledBackground, True)
+        self.calendar_container.setStyleSheet("""
+            QWidget#CalendarCard {
+                background-color: #FFFFFF;
+                border: 1px solid #E5E9E6;
+                border-radius: 16px;
+            }
+        """)
+
+        calendar_layout = QVBoxLayout(self.calendar_container)
+        calendar_layout.setContentsMargins(12, 12, 12, 12)
+        calendar_layout.setSpacing(0)
+
+        self.calendar = QCalendarWidget()
+        self.calendar.setVerticalHeaderFormat(QCalendarWidget.NoVerticalHeader)
+        self.calendar.setHorizontalHeaderFormat(QCalendarWidget.ShortDayNames)
+        self.calendar.setGridVisible(False)
+        self.calendar.setNavigationBarVisible(True)
+        self.calendar_view = self.calendar.findChild(QTableView)
+        self.calendar_delegate = CalendarDateDelegate(self.calendar_view)
+        self.calendar_view.setItemDelegate(self.calendar_delegate)
+
+        calendar_layout.addWidget(self.calendar)
+        calendar_layout.addWidget(self.calendar)
+
+        self.timer_widget = QWidget()
+        self.timer_widget.setObjectName("TimerCard")
+        self.timer_widget.setAttribute(Qt.WA_StyledBackground, True)
+
+        timer_vbox = QVBoxLayout(self.timer_widget)
+        timer_vbox.setContentsMargins(20, 20, 20, 20)
+        timer_vbox.setSpacing(18)
+
+        # Title
+        # Timer heading and subtitle
+        self.timer_heading = QLabel()
+        self.timer_heading.setTextFormat(Qt.RichText)
+        self.timer_heading.setText("""
+            <div style="text-align: left; line-height: 125%;">
+                <span style="color: #1F2421; font-size: 26px; font-weight: 800;">
+                    Focus Timer
+                </span>
+                <br>
+                <span style="color: #5F6561; font-size: 13px; font-weight: 400;">
+                    Make it count.
+                </span>
+            </div>
+        """)
+        self.timer_heading.setAlignment(Qt.AlignLeft | Qt.AlignTop)
+        self.timer_heading.setContentsMargins(0, 0, 0, 0)
+
+        timer_vbox.addWidget(self.timer_heading)
+
+        # Time display and adjustment buttons
+        time_row = QHBoxLayout()
+        time_row.setSpacing(12)
+
+        self.minus_button = QPushButton("−")
+        self.minus_button.setFixedSize(36, 36)
+
+        self.time_label = QLabel("25:00")
+        self.time_label.setAlignment(Qt.AlignCenter)
+        self.time_label.setMinimumWidth(150)
+
+        self.plus_button = QPushButton("+")
+        self.plus_button.setFixedSize(36, 36)
+
+        time_row.addStretch()
+        time_row.addWidget(self.minus_button)
+        time_row.addWidget(self.time_label)
+        time_row.addWidget(self.plus_button)
+        time_row.addStretch()
+
+        timer_vbox.addLayout(time_row)
+
+        # Start/Stop and Reset controls
+        controls_row = QHBoxLayout()
+        controls_row.setContentsMargins(0, 0, 0, 0)
+        controls_row.setSpacing(10)
+        controls_row.setAlignment(Qt.AlignHCenter | Qt.AlignTop)
+
+        self.start_button = QPushButton("▶")
+        self.start_button.setFixedSize(46, 46)
+
+        self.reset_button = QPushButton("↺")
+        self.reset_button.setFixedSize(46, 46)
+
+        controls_row.addWidget(self.start_button)
+        controls_row.addWidget(self.reset_button)
+
+        timer_vbox.addLayout(controls_row)
+
+        right_bar_vbox.addWidget(self.calendar_container, 1)
+        right_bar_vbox.addWidget(self.timer_widget, 1)
+
+        self.styleNavButtons()
+        self.styleDateFormats()
+        self.applyStyles()
+        self.styleTimer()
+
+    def styleNavButtons(self):
+        # Replace the default green circle arrows with clean text arrows
+        for name, text in (("qt_calendar_prevmonth", "‹"),
+                           ("qt_calendar_nextmonth", "›")):
+            btn = self.calendar.findChild(QToolButton, name)
+            if btn:
+                btn.setIcon(QIcon())
+                btn.setText(text)
+                btn.setToolButtonStyle(Qt.ToolButtonTextOnly)
+                btn.setCursor(Qt.PointingHandCursor)
+
+    def styleDateFormats(self):
+        # Header (Sun, Mon, ...) 
+        header_fmt = QTextCharFormat()
+        header_fmt.setForeground(QBrush(QColor("#5F6561")))
+        header_fmt.setFontWeight(QFont.DemiBold)
+        self.calendar.setHeaderTextFormat(header_fmt)
+
+        # Remove Qt's default red weekends; use the app's text colour for all days
+        day_fmt = QTextCharFormat()
+        day_fmt.setForeground(QBrush(QColor("#303A36")))
+        for day in (Qt.Monday, Qt.Tuesday, Qt.Wednesday, Qt.Thursday,
+                    Qt.Friday, Qt.Saturday, Qt.Sunday):
+            self.calendar.setWeekdayTextFormat(day, day_fmt)
+
+        # Highlight today in the teal accent
+        today_fmt = QTextCharFormat()
+        today_fmt.setForeground(QBrush(QColor("#0D6B60")))
+        today_fmt.setBackground(QBrush(QColor("#E3F1EE")))
+        today_fmt.setFontWeight(QFont.Bold)
+        self.calendar.setDateTextFormat(QDate.currentDate(), today_fmt)
+
+    def applyStyles(self):
+        self.calendar.setStyleSheet("""
+            QCalendarWidget {
+                background-color: #FFFFFF;
+                border: none;
+            }
+
+            QCalendarWidget QWidget {
+                background-color: #FFFFFF;
+                alternate-background-color: #FFFFFF;
+                color: #303A36;
+                border: none;
+                font-family: Nunito;
+            }
+
+            /* Navigation bar */
+            QCalendarWidget QWidget#qt_calendar_navigationbar {
+                background-color: #FFFFFF;
+                border: none;
+                padding: 2px 0px 8px 0px;
+            }
+
+            QCalendarWidget QToolButton {
+                color: #1F2421;
+                background-color: transparent;
+                border: none;
+                border-radius: 8px;
+                padding: 6px 10px;
+                font-size: 14px;
+                font-weight: 700;
+            }
+
+            QCalendarWidget QToolButton:hover {
+                background-color: #E3F1EE;
+                color: #0D6B60;
+            }
+
+            QCalendarWidget QToolButton:pressed {
+                background-color: #CFE7E2;
+            }
+
+            /* Prev / next arrows */
+            QCalendarWidget QToolButton#qt_calendar_prevmonth,
+            QCalendarWidget QToolButton#qt_calendar_nextmonth {
+                font-size: 20px;
+                min-width: 28px;
+                padding: 2px 8px;
+            }
+
+            /* Month dropdown: remove the odd arrow */
+            QCalendarWidget QToolButton#qt_calendar_monthbutton::menu-indicator {
+                image: none;
+                width: 0px;
+            }
+
+            QCalendarWidget QMenu {
+                background-color: #FFFFFF;
+                color: #303A36;
+                border: 1px solid #E5E9E6;
+                border-radius: 8px;
+                padding: 4px;
+            }
+
+            QCalendarWidget QMenu::item {
+                padding: 6px 18px;
+                border-radius: 6px;
+            }
+
+            QCalendarWidget QMenu::item:selected {
+                background-color: #E3F1EE;
+                color: #0D6B60;
+            }
+
+            QCalendarWidget QSpinBox {
+                color: #303A36;
+                background-color: #FFFFFF;
+                border: 1px solid #E5E9E6;
+                border-radius: 8px;
+                padding: 4px 8px;
+                selection-background-color: #168F80;
+            }
+
+            /* Date grid */
+            QCalendarWidget QAbstractItemView {
+                background-color: #FFFFFF;
+                alternate-background-color: #FFFFFF;
+                selection-background-color: #168F80;
+                selection-color: #FFFFFF;
+                outline: none;
+                border: none;
+            }
+
+            QCalendarWidget QAbstractItemView:enabled {
+                color: #303A36;
+            }
+
+            QCalendarWidget QAbstractItemView:disabled {
+                color: #B8C0BB;
+            }
+            
+        """)
+
+    def styleTimer(self):
+        self.timer_widget.setStyleSheet("""
+            QWidget#TimerCard {
+                border-image: url("Resources/Images_/timer_bg.png") 0 0 0 0 stretch stretch;
+                border: 1px solid #293641;
+                border-radius: 16px;
+            }
+
+            QLabel {
+                background: transparent;
+                border: none;
+                color: #F5F5F3;
+                font-family: Nunito;
+            }
+
+            QLabel#TimerTitle {
+                color: #A8B8BD;
+                font-size: 12px;
+                font-weight: 700;
+            }
+
+            QPushButton {
+                border: none;
+                border-radius: 18px;
+                background-color: #34434D;
+                color: #F5F5F3;
+                font-size: 20px;
+                font-weight: 700;
+            }
+
+            QPushButton:hover {
+                background-color: #425660;
+            }
+
+            QPushButton:pressed {
+                background-color: #168F80;
+                padding-top: 2px;
+                padding-left: 2px;
+            }
+        """)
+
+        self.timer_heading.setStyleSheet("""
+            QLabel {
+                color: #F5F5F3;
+                font-family: Nunito;
+                background: transparent;
+                border: none;
+            }
+        """)
+
+        self.time_label.setStyleSheet("""
+            QLabel {
+                color: #1F2421;
+                font-family: Nunito;
+                font-size: 38px;
+                font-weight: 800;
+                background: transparent;
+                border: none;
+            }
+        """)
+
+        button_style = """
+            QPushButton {
+                background-color: #168F80;
+                color: #FFFFFF;
+                border: none;
+                border-radius: 23px;
+                font-size: 18px;
+                font-weight: 700;
+            }
+
+            QPushButton:hover {
+                background-color: #11796D;
+            }
+
+            QPushButton:pressed {
+                background-color: #0D5B52;
+                padding-top: 2px;
+                padding-left: 2px;
+            }
+
+            QPushButton:disabled {
+                background-color: #A8CFC8;
+                color: #F5F5F3;
+            }
+        """
+
+        self.start_button.setStyleSheet(button_style)
+        self.reset_button.setStyleSheet(button_style)
 
 def main():
     app = QApplication([])
