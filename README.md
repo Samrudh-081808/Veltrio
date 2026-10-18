@@ -45,7 +45,7 @@ Veltrio is a personal project focused on building a clean, organized desktop int
 1. Clone the repository:
 
    ```bash
-   git clone YOUR-REPOSITORY-URL
+   git clone https://github.com/Samrudh-081808/Veltrio
    ```
 
 2. Navigate to the project directory:
