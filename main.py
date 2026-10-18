@@ -44,6 +44,8 @@ class mainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Veltrio")
+        icon_path = Path(__file__).parent / "Resources" / "Images_" / "veltrio.ico"
+        self.setWindowIcon(QIcon(str(icon_path)))
         self.initUI()
 
     def initUI(self):
