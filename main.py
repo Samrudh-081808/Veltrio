@@ -490,6 +490,7 @@ class Main_Display(QWidget):
         up_next_vbox.addWidget(self.task_widget_2)
         up_next_vbox.addStretch(1)
         self.up_next_widget.setLayout(up_next_vbox)
+        add_card_shadow(self.up_next_widget)
 
         self.task_widget_1.setSizePolicy(
             QSizePolicy.Expanding, QSizePolicy.Fixed
@@ -503,6 +504,7 @@ class Main_Display(QWidget):
 
         topwidget_hbox.addWidget(self.greeting_widget , 3)
         topwidget_hbox.addWidget(self.up_next_widget, 2 , alignment=Qt.AlignBottom)
+        self.top_widget.setObjectName("top_widget")
 
         middle_vbox = QVBoxLayout()
         middle_vbox.setContentsMargins(12, 8, 12, 8)
@@ -558,12 +560,12 @@ class Main_Display(QWidget):
             (self.today_task_3, "Finish workout", "Health", "6:00 PM"),
         ]:
             task_hbox = QHBoxLayout(task_widget)
-            task_hbox.setContentsMargins(12, 8, 12, 8)
-            task_hbox.setSpacing(12)
+            task_hbox.setContentsMargins(8, 14, 8, 14)
+            task_hbox.setSpacing(14)
 
             task_details_vbox = QVBoxLayout()
             task_details_vbox.setContentsMargins(0, 0, 0, 0)
-            task_details_vbox.setSpacing(4)
+            task_details_vbox.setSpacing(5)
 
             task_checkbox = QCheckBox(task_name)
             task_location_label = QLabel(location)
@@ -593,14 +595,21 @@ class Main_Display(QWidget):
     
     def applyStyles(self):
         self.top_widget.setStyleSheet("""
-            QWidget {
-                background-color: #E3F1EE;
+            QWidget#top_widget {
+                border-image: url("Resources/Images_/Pastel Mint Landscape with Lake and Birds.png") 0 0 0 0 stretch stretch;
                 border-radius: 20px;
             }
 
             QWidget#GreetingCard {
                 background-color: #E3F1EE;
                 border-radius: 20px;
+            }
+        """)
+        self.greeting_widget.setAttribute(Qt.WA_StyledBackground, True) 
+        self.greeting_widget.setStyleSheet("""
+            QWidget {
+                background-color: transparent;
+                border: none;
             }
         """)
 
