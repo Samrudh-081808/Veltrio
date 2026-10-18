@@ -1,7 +1,8 @@
 import sys
 from PyQt5.QtWidgets import (QMainWindow, QApplication, QLabel,
                              QWidget, QVBoxLayout, QHBoxLayout,
-                             QButtonGroup, QPushButton, QLineEdit)
+                             QButtonGroup, QPushButton, QLineEdit,
+                             QCheckBox)
 from PyQt5.QtGui import (QIcon, QFont, QPixmap, QImage, QFontDatabase)
 from PyQt5.QtCore import (Qt)
 from PyQt5.QtWidgets import QGraphicsDropShadowEffect
@@ -254,6 +255,7 @@ class TopBar(QWidget):
             }
         """)
 
+            
 
 
 
@@ -436,7 +438,25 @@ class Main_Display(QWidget):
         
 
         self.middle_widget = QWidget()
+        self.add_task_input = QLineEdit()
+        self.send_task_button = QPushButton("➣")
+        self.list_button = QPushButton("🔵  Inbox  ▾")
+        self.now_button = QPushButton("🕒  Now")
+        self.tomorrow_button = QPushButton("🕒  Tomorrow")
+        self.next_week_button = QPushButton("🕒  Next week")
+        self.custom_button = QPushButton("🗓️  Custom")
+        self.date_button_group = QButtonGroup(self)
+        self.date_button_group.setExclusive(True)   
+        
+        
+        
         self.bottom_widget = QWidget()
+        self.todays_tasks_label = QLabel("Today's Tasks")
+        self.today_task_1 = QWidget()
+        self.today_task_2 = QWidget()
+        self.today_task_3 = QWidget()
+        self.no_more_tasks_label = QLabel("No more tasks for today")
+        self.no_more_tasks_subtitle = QLabel("You're all caught up. Enjoy the rest of your day.")
         self.initUI()
 
     def initUI(self):
@@ -484,7 +504,90 @@ class Main_Display(QWidget):
         topwidget_hbox.addWidget(self.greeting_widget , 3)
         topwidget_hbox.addWidget(self.up_next_widget, 2 , alignment=Qt.AlignBottom)
 
+        middle_vbox = QVBoxLayout()
+        middle_vbox.setContentsMargins(12, 8, 12, 8)
+        middle_vbox.setSpacing(10)
+        self.middle_widget.setLayout(middle_vbox)
+
+
+        input_hbox = QHBoxLayout()
+        input_hbox.setSpacing(10)
+
+        self.add_task_input.setPlaceholderText("Add task for today")
+        input_hbox.addWidget(self.add_task_input, 1)
+        input_hbox.addWidget(self.send_task_button)
+
+        middle_vbox.addLayout(input_hbox)
+
+        options_hbox = QHBoxLayout()
+        options_hbox.setSpacing(8)
+
+        for button in [
+            self.list_button,
+            self.now_button,
+            self.tomorrow_button,
+            self.next_week_button,
+            self.custom_button
+        ]:
+            options_hbox.addWidget(button)
+
+        middle_vbox.addLayout(options_hbox)
+
+        for button in [
+            self.now_button,
+            self.tomorrow_button,
+            self.next_week_button,
+            self.custom_button
+        ]:
+            button.setCheckable(True)
+            self.date_button_group.addButton(button)
+
+        self.now_button.setChecked(True)
+
+
+        bottom_vbox = QVBoxLayout()
+        bottom_vbox.setContentsMargins(16, 16, 16, 16)
+        bottom_vbox.setSpacing(12)
+        self.bottom_widget.setLayout(bottom_vbox)
+
+        bottom_vbox.addWidget(self.todays_tasks_label)
+
+        for task_widget, task_name, location, time in [
+            (self.today_task_1, "Complete Python project", "Inbox", "10:00 AM"),
+            (self.today_task_2, "Review DSA concepts", "Study", "2:00 PM"),
+            (self.today_task_3, "Finish workout", "Health", "6:00 PM"),
+        ]:
+            task_hbox = QHBoxLayout(task_widget)
+            task_hbox.setContentsMargins(12, 8, 12, 8)
+            task_hbox.setSpacing(12)
+
+            task_details_vbox = QVBoxLayout()
+            task_details_vbox.setContentsMargins(0, 0, 0, 0)
+            task_details_vbox.setSpacing(4)
+
+            task_checkbox = QCheckBox(task_name)
+            task_location_label = QLabel(location)
+            task_time_label = QLabel(time)
+
+            task_details_vbox.addWidget(task_checkbox)
+            task_details_vbox.addWidget(task_location_label)
+
+            task_time_label.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
+
+            task_hbox.addLayout(task_details_vbox, 1)
+            task_hbox.addWidget(task_time_label)
+
+            bottom_vbox.addWidget(task_widget)
+
+        bottom_vbox.addStretch()
+        self.no_more_tasks_label.setAlignment(Qt.AlignCenter)
+        self.no_more_tasks_subtitle.setAlignment(Qt.AlignCenter)
+
+        bottom_vbox.addSpacing(12)
+        bottom_vbox.addWidget(self.no_more_tasks_label)
+        bottom_vbox.addWidget(self.no_more_tasks_subtitle)
         self.applyStyles()
+
 
 
     
@@ -574,6 +677,204 @@ class Main_Display(QWidget):
                 background: transparent;
             }
         """)
+
+        # Middle widget
+        self.middle_widget.setStyleSheet("""
+            QWidget {
+                background-color: #FFFFFF;
+                border: 1px solid #E5E9E6;
+                border-radius: 22px;
+            }
+        """)
+
+        # Task input
+        self.add_task_input.setStyleSheet("""
+            QLineEdit {
+                background-color: #FFFFFF;
+                border: 1px solid #E5E9E6;
+                border-radius: 22px;
+                padding: 12px 18px;
+                color: #1F2421;
+                font-family: Nunito;
+                font-size: 14px;
+                selection-background-color: #168F80;
+            }
+
+            QLineEdit:focus {
+                border: 1px solid #168F80;
+            }
+        """)
+
+        # Send button
+        self.send_task_button.setStyleSheet("""
+            QPushButton {
+                background-color: #168F80;
+                color: white;
+                border: none;
+                border-radius: 24px;
+                min-width: 44px;
+                max-width: 44px;
+                min-height: 44px;
+                max-height: 44px;
+                font-size: 18px;
+            }
+
+            QPushButton:hover {
+                background-color: #11796D;
+            }
+        """)
+
+        # Date and list buttons
+        for button in [
+            self.list_button,
+            self.now_button,
+            self.tomorrow_button,
+            self.next_week_button,
+            self.custom_button
+        ]:
+            button.setStyleSheet("""
+                QPushButton {
+                    background-color: #F1F2F0;
+                    color: #5F6561;
+                    border: none;
+                    border-radius: 18px;
+                    padding: 10px 14px;
+                    font-family: Nunito;
+                    font-size: 13px;
+                }
+
+                QPushButton:hover {
+                    background-color: #E3F1EE;
+                    color: #11796D;
+                }
+
+                QPushButton:checked {
+                    background-color: #E3F1EE;
+                    color: #11796D;
+                    border: 1px solid #168F80;
+                    font-weight: 600;
+                }
+            """)
+
+        self.send_task_button.setStyleSheet("""
+                QPushButton {
+                    background-color: #168F80;
+                    color: white;
+                    border: none;
+                    border-radius: 22px;
+                    min-width: 44px;
+                    max-width: 44px;
+                    min-height: 44px;   
+                    max-height: 44px;
+                    font-size: 18px;
+                }
+            """)
+
+        # Today's Tasks container
+        self.bottom_widget.setStyleSheet("""
+            QWidget#bottom_widget {
+                background-color: #FFFFFF;
+                border: 1px solid #E5E9E6;
+                border-radius: 18px;
+            }
+        """)
+        self.bottom_widget.setObjectName("bottom_widget")
+
+        # Section heading
+        self.todays_tasks_label.setStyleSheet("""
+            QLabel {
+                font-family: Nunito;
+                font-size: 19px;
+                font-weight: 800;
+                color: #1F2421;
+                background: transparent;
+                border: none;
+            }
+        """)
+
+        # Individual task rows
+        for task_widget in [
+            self.today_task_1,
+            self.today_task_2,
+            self.today_task_3
+        ]:
+            task_widget.setStyleSheet("""
+                QWidget {
+                    background-color: #FFFFFF;
+                    border: 1px solid #E5E9E6;
+                    border-radius: 12px;
+                    margin : 1px 0px;
+                }
+            """)
+
+        # Task checkboxes
+        for checkbox in self.bottom_widget.findChildren(QCheckBox):
+            checkbox.setStyleSheet("""
+                QCheckBox {
+                    font-family: Nunito;
+                    font-size: 14px;
+                    font-weight: 700;
+                    color: #1F2421;
+                    spacing: 10px;
+                    background: transparent;
+                    border: none;
+                }
+
+                QCheckBox::indicator {
+                    width: 17px;
+                    height: 17px;
+                    border: 2px solid #C9D1CC;
+                    border-radius: 5px;
+                    background-color: white;
+                }
+
+                QCheckBox::indicator:hover {
+                    border-color: #168F80;
+                }
+
+                QCheckBox::indicator:checked {
+                    background-color: #168F80;
+                    border-color: #168F80;
+                }
+
+                QCheckBox:checked {
+                    color: #8A918C;
+                }
+            """)
+
+        # Task location labels
+        for label in self.bottom_widget.findChildren(QLabel):
+            if label is not self.todays_tasks_label:
+                label.setStyleSheet("""
+                    QLabel {
+                        font-family: Nunito;
+                        font-size: 12px;
+                        color: #777F79;
+                        background: transparent;
+                        border: none;
+                    }
+                """)
+        self.no_more_tasks_label.setStyleSheet("""
+                QLabel {
+                    font-family: Nunito;
+                    font-size: 14px;
+                    font-weight: 600;
+                    color: #5F6561;
+                    background: transparent;
+                    border: none;
+                }
+            """)
+
+        self.no_more_tasks_subtitle.setStyleSheet("""
+                QLabel {
+                    font-family: Nunito;
+                    font-size: 12px;
+                    font-weight: 400;
+                    color: #9AA19C;
+                    background: transparent;
+                    border: none;
+                }
+            """)
 
 
 class Right_Bar(QWidget):
