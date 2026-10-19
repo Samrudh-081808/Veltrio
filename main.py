@@ -43,6 +43,10 @@ from PyQt5.QtCore import QRectF
 from PyQt5.QtGui import QPainter
 from PyQt5.QtWidgets import QStyle
 
+import ctypes
+
+
+
 # UI dimensions
 SIDEBAR_W = 240
 HEADER_H = 64
@@ -123,6 +127,7 @@ def load_fonts():
         QFontDatabase.addApplicationFont(str(ttf))
 
 
+
 # Main application window
 class mainWindow(QMainWindow):
 
@@ -133,6 +138,19 @@ class mainWindow(QMainWindow):
         self.setWindowTitle("Veltrio")
         icon_path = Path(__file__).parent / "Resources" /"veltrio-icons" / "veltrio.ico"
         self.setWindowIcon(QIcon(str(icon_path)))
+
+        # idk wtf this is but it makes the title bar teal
+        DWMWA_CAPTION_COLOR = 35
+
+        color = 0x00F3F5F5  # RGB #F5F5F3 in Windows COLORREF format
+
+        ctypes.windll.dwmapi.DwmSetWindowAttribute(
+            int(self.winId()),
+            DWMWA_CAPTION_COLOR,
+            ctypes.byref(ctypes.c_int(color)),
+            ctypes.sizeof(ctypes.c_int)
+        )
+
 
         self.initUI()
 
@@ -266,6 +284,8 @@ class TopBar(QWidget):
 
     def initUI(self):
         topbar_hbox = QHBoxLayout()
+        topbar_hbox.setContentsMargins(0, 0, 0, 0)
+        topbar_hbox.setSpacing(12)  
         self.setLayout(topbar_hbox)
 
         topbar_hbox.addWidget(self.search_field)
@@ -360,10 +380,6 @@ class TopBar(QWidget):
                 background-color: #0D5B52;
             }
         """)
-
-            
-
-
 
 
 class SideBar(QWidget):
@@ -532,8 +548,6 @@ class SideBar(QWidget):
                 font-weight: 600;
             }
         """)
-
-
 
 
 class Main_Display(QWidget):
