@@ -1,6 +1,8 @@
 # Import necessary modules
 import sys
 from pathlib import Path
+from PyQt5.QtCore import QSize
+from veltrio_icons import VeltrioIcons
 
 from PyQt5.QtCore import (Qt,
     QSettings,
@@ -273,18 +275,24 @@ class TopBar(QWidget):
         topbar_hbox.addWidget(self.profile_icon_button)
 
         self.search_field.setPlaceholderText("Search task")
-        self.export_summary_button.setText("📂 Export Summary")
-        self.switch_light_modes.setText("🌗")
-        self.notification_panel_open_button.setText("🔔")
-        self.profile_icon_button.setText("👤")
+        # self.export_summary_button.setText(" Export Summary")
+        VeltrioIcons.apply_stateful(self.export_summary_button, "export_summary")
+        VeltrioIcons.apply_stateful(self.switch_light_modes, "theme_day")
+        VeltrioIcons.apply_stateful(self.notification_panel_open_button, "notifications")
+        VeltrioIcons.apply_stateful(self.profile_icon_button, "profile")
 
         self.applyStyles()
         for w in (self.search_field,
-          self.export_summary_button,
-          self.switch_light_modes,
-          self.notification_panel_open_button,
-          self.profile_icon_button):
-          add_control_shadow(w)
+            self.export_summary_button,
+            self.switch_light_modes,
+            self.notification_panel_open_button,
+            self.profile_icon_button):
+            add_control_shadow(w)
+
+        self.search_field.addAction(
+            QIcon(str(VeltrioIcons.path("search"))),
+            QLineEdit.LeadingPosition
+        )
 
     def applyStyles(self):
 
@@ -364,26 +372,26 @@ class SideBar(QWidget):
         super().__init__()
         self.setFixedWidth(SIDEBAR_W)
         # Dashboard and stuff
-        self.Dashboard_button = QPushButton("Dashboard", self)
-        self.Tasks_button = QPushButton("Tasks", self)
-        self.Calendar_button = QPushButton("Calendar", self)
-        self.Notes_button = QPushButton("Notes", self)
+        self.Dashboard_button = QPushButton(" Dashboard", self)
+        self.Tasks_button = QPushButton(" Tasks", self)
+        self.Calendar_button = QPushButton(" Calendar", self)
+        self.Notes_button = QPushButton(" Notes", self)
 
 
         # List Area
         self.my_list_label = QLabel("My Lists", self)
         self.add_new_list_button = QPushButton("+", self)
-        self.Inbox_button = QPushButton("Inbox", self)
-        self.Work_button = QPushButton("Work", self)
-        self.Study = QPushButton("Study", self)
-        self.Health = QPushButton("Health", self)
-        self.Holiday_trip_button = QPushButton("Holiday Trip", self)
+        self.Inbox_button = QPushButton(" Inbox", self)
+        self.Work_button = QPushButton(" Work", self)
+        self.Study = QPushButton(" Study", self)
+        self.Health = QPushButton(" Health", self)
+        self.Holiday_trip_button = QPushButton(" Holiday Trip", self)
 
         #Workspace Area
         self.Workspace_label = QLabel("Workspaces", self)
         self.add_new_workspace_button = QPushButton("+", self)
-        self.add_sample_workspace_button_1 = QPushButton("Workspace 1", self)
-        self.add_sample_workspace_button_2 = QPushButton("Workspace 2", self)
+        self.add_sample_workspace_button_1 = QPushButton(" Workspace 1", self)
+        self.add_sample_workspace_button_2 = QPushButton(" Workspace 2", self)
         self.initUI()
 
     def initUI(self):
@@ -468,8 +476,22 @@ class SideBar(QWidget):
             self.nav_group.addButton(button)
         self.Dashboard_button.setChecked(True)
 
+        
+        # Sidebar icons
+        VeltrioIcons.apply_stateful(self.Dashboard_button, "dashboard")
+        VeltrioIcons.apply_stateful(self.Tasks_button, "tasks")
+        VeltrioIcons.apply_stateful(self.Calendar_button, "calendar")
+        VeltrioIcons.apply_stateful(self.Notes_button, "notes")
+        VeltrioIcons.apply_stateful(self.Inbox_button, "inbox")
+        VeltrioIcons.apply_stateful(self.Work_button, "work")
+        VeltrioIcons.apply_stateful(self.Study, "study")
+        VeltrioIcons.apply_stateful(self.Health, "health")
+        VeltrioIcons.apply_stateful(self.Holiday_trip_button, "holiday_trip")
+        VeltrioIcons.apply_stateful(self.add_sample_workspace_button_1,"workspace")
+        VeltrioIcons.apply_stateful(self.add_sample_workspace_button_2,"workspace")
 
         self.applyStyles()
+
 
     def applyStyles(self):
         self.setStyleSheet("""
@@ -537,12 +559,12 @@ class Main_Display(QWidget):
 
         self.middle_widget = QWidget()
         self.add_task_input = QLineEdit()
-        self.send_task_button = QPushButton("➣")
-        self.list_button = QPushButton("🔵  Inbox  ▾")
-        self.now_button = QPushButton("🕒  Now")
-        self.tomorrow_button = QPushButton("🕒  Tomorrow")
-        self.next_week_button = QPushButton("🕒  Next week")
-        self.custom_button = QPushButton("🗓️  Custom")
+        self.send_task_button = QPushButton()
+        self.list_button = QPushButton(" Inbox")
+        self.now_button = QPushButton(" Now")
+        self.tomorrow_button = QPushButton(" Tomorrow")
+        self.next_week_button = QPushButton(" Next week")
+        self.custom_button = QPushButton(" Custom")
         self.date_button_group = QButtonGroup(self)
         self.date_button_group.setExclusive(True)   
         
@@ -637,12 +659,19 @@ class Main_Display(QWidget):
             self.now_button,
             self.tomorrow_button,
             self.next_week_button,
-            self.custom_button
+            self.custom_button,
+            self.list_button
         ]:
             button.setCheckable(True)
             self.date_button_group.addButton(button)
 
         self.now_button.setChecked(True)
+        VeltrioIcons.apply_stateful(self.send_task_button, "task_submit")
+        VeltrioIcons.apply_stateful(self.list_button, "inbox")
+        VeltrioIcons.apply_stateful(self.now_button, "date_today")
+        VeltrioIcons.apply_stateful(self.tomorrow_button, "date_tomorrow")
+        VeltrioIcons.apply_stateful(self.next_week_button, "date_next_week")
+        VeltrioIcons.apply_stateful(self.custom_button, "date_custom")
 
 
         bottom_vbox = QVBoxLayout()
@@ -848,6 +877,7 @@ class Main_Display(QWidget):
                     padding: 10px 14px;
                     font-family: Nunito;
                     font-size: 13px;
+                    font-weight: 600;
                 }
 
                 QPushButton:hover {
@@ -1043,6 +1073,8 @@ class Right_Bar(QWidget):
         self.calendar_view = self.calendar.findChild(QTableView)
         self.calendar_delegate = CalendarDateDelegate(self.calendar_view)
         self.calendar_view.setItemDelegate(self.calendar_delegate)
+        # VeltrioIcons.apply(self.calendar.findChild(QToolButton, "qt_calendar_prevmonth"), "previous")
+        # VeltrioIcons.apply(self.calendar.findChild(QToolButton, "qt_calendar_nextmonth"), "next")
 
         calendar_layout.addWidget(self.calendar)
         calendar_layout.addWidget(self.calendar)
@@ -1079,7 +1111,7 @@ class Right_Bar(QWidget):
         time_row = QHBoxLayout()
         time_row.setSpacing(12)
 
-        self.minus_button = QPushButton("−")
+        self.minus_button = QPushButton()
         self.minus_button.setFixedSize(36, 36)
 
         self.time = "15:00"
@@ -1088,7 +1120,7 @@ class Right_Bar(QWidget):
         self.time_label.setAlignment(Qt.AlignCenter)
         self.time_label.setMinimumWidth(150)
 
-        self.plus_button = QPushButton("+")
+        self.plus_button = QPushButton()
         self.plus_button.setFixedSize(36, 36)
 
         time_row.addStretch()
@@ -1105,10 +1137,10 @@ class Right_Bar(QWidget):
         controls_row.setSpacing(10)
         controls_row.setAlignment(Qt.AlignHCenter | Qt.AlignTop)
 
-        self.start_button = QPushButton("▶")
+        self.start_button = QPushButton()
         self.start_button.setFixedSize(46, 46)
 
-        self.reset_button = QPushButton("↺")
+        self.reset_button = QPushButton()
         self.reset_button.setFixedSize(46, 46)
 
         controls_row.addWidget(self.start_button)
@@ -1120,6 +1152,12 @@ class Right_Bar(QWidget):
         right_bar_vbox.addWidget(self.timer_widget, 1)
         add_card_shadow(self.calendar_container)    
         add_card_shadow(self.timer_widget)
+
+
+        VeltrioIcons.apply(self.start_button, "timer_start")
+        VeltrioIcons.apply(self.reset_button, "timer_reset")
+        VeltrioIcons.apply(self.plus_button, "increase_time")
+        VeltrioIcons.apply(self.minus_button, "decrease_time")
 
         self.styleNavButtons()
         self.styleDateFormats()
@@ -1166,7 +1204,7 @@ class Right_Bar(QWidget):
         self.timer.stop()
         self.minutes = 15
         self.seconds = 0
-        self.start_button.setText("▶")
+        VeltrioIcons.apply(self.start_button, "timer_start")
         self.time_label.setText(f"{self.minutes:02} : {self.seconds:02}")
 
 
@@ -1174,7 +1212,7 @@ class Right_Bar(QWidget):
 
         if self.minutes <= 0 and self.seconds <= 0:
             self.timer.stop()
-            self.start_button.setText("▶")
+            VeltrioIcons.apply(self.start_button, "timer_start")
             self.time_label.setText(f"{self.minutes:02} : {self.seconds:02}")
 
         elif self.seconds <= 0:
@@ -1190,16 +1228,16 @@ class Right_Bar(QWidget):
     def change_start_button_to_pause(self):
         if self.timer.isActive():
             self.timer.stop()
-            self.start_button.setText("▶")
+            VeltrioIcons.apply(self.start_button, "timer_start")
 
         else:
             self.timer.start()
-            self.start_button.setText("Ⅱ")
+            VeltrioIcons.apply(self.start_button, "timer_pause")
 
     def styleNavButtons(self):
         # Replace the default green circle arrows with clean text arrows
         for name, text in (("qt_calendar_prevmonth", "‹"),
-                           ("qt_calendar_nextmonth", "›")):
+                        ("qt_calendar_nextmonth", "›")):
             btn = self.calendar.findChild(QToolButton, name)
             if btn:
                 btn.setIcon(QIcon())
