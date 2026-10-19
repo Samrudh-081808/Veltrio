@@ -1,37 +1,39 @@
-# Veltrio
-
-> **Status:** Work in progress 🚧
+# Veltrio 
+>🚧 Development Status: Work in Progress
 
 A desktop productivity dashboard built with **Python and PyQt5**.
 
-Veltrio is a personal project focused on building a clean, organized desktop interface with custom widgets, reusable components, and a visually appealing dashboard layout.
+Veltrio is a personal project focused on creating a clean, organized productivity interface with custom-styled widgets, reusable UI components, and a cohesive visual theme.
 
 ## Preview
 
-<!-- Add a screenshot of your dashboard here -->
-<!-- Example: ![Veltrio Dashboard](Resources/Images_/screenshot.png) -->
-
 *Screenshots coming soon.*
+
+<!-- Add a screenshot here when ready -->
+<!-- ![Veltrio Dashboard](Resources/Images_/screenshot.png) -->
 
 ## Features
 
-- Custom desktop dashboard interface
-- Header with branding and controls
-- Sidebar navigation layout
-- Main dashboard with customizable sections
-- Right-side panel for additional information
-- Custom styling and visual assets
-- Modular UI components built with PyQt5
+- **Custom dashboard** — A personalized interface with a greeting and task overview.
+- **Sidebar navigation** — Organized navigation for Dashboard, Tasks, Calendar, Notes, and lists.
+- **Task management interface** — Task input, list selection, and date-based options.
+- **Focus timer** — A customizable timer with start, pause, reset, and time adjustment controls.
+- **Calendar widget** — A styled calendar with custom date selection and navigation.
+- **Custom icon system** — A reusable icon manager with teal and charcoal icon variants.
+- **Themed interface** — A consistent visual design using custom colors, fonts, icons, and image assets.
+- **Modular UI components** — Separate components for the header, sidebar, main dashboard, and right-side panel.
 
 *Some features are still under development and may not be fully functional.*
 
 ## Tech Stack
 
-- **Language:** Python
-- **GUI Framework:** PyQt5
-- **Layout:** Qt layouts and widgets
-- **Styling:** Qt Style Sheets (QSS)
-- **Assets:** Custom images, fonts, and application icon
+| Technology | Purpose |
+|---|---|
+| Python | Application logic |
+| PyQt5 | Desktop GUI framework |
+| Qt Layouts and Widgets | Interface structure |
+| Qt Style Sheets (QSS) | Custom styling |
+| SVG and image assets | Icons and visual design |
 
 ## Getting Started
 
@@ -45,7 +47,7 @@ Veltrio is a personal project focused on building a clean, organized desktop int
 1. Clone the repository:
 
    ```bash
-   git clone https://github.com/Samrudh-081808/Veltrio
+   git clone https://github.com/Samrudh-081808/Veltrio.git
    ```
 
 2. Navigate to the project directory:
@@ -54,13 +56,11 @@ Veltrio is a personal project focused on building a clean, organized desktop int
    cd Veltrio
    ```
 
-3. Install the required dependencies:
+3. Install the required dependency:
 
    ```bash
    pip install PyQt5
    ```
-
-   Install any additional dependencies used by the project.
 
 4. Run the application:
 
@@ -68,29 +68,28 @@ Veltrio is a personal project focused on building a clean, organized desktop int
    python main.py
    ```
 
-   Replace `main.py` if your application's entry-point filename is different.
+Make sure the project’s resource folders and required icon files are present. Install any additional dependencies if the project requires them.
 
 ## Development Status
 
-Veltrio is currently under active development. The primary focus is on developing the dashboard interface and improving the overall application structure.
+Veltrio is actively being developed. Current work focuses on refining the interface, improving component consistency, and implementing functionality.
 
-At this stage:
+Areas still being developed include:
 
-- Some features are incomplete or non-functional.
-- The layout may not scale consistently across different window sizes.
-- Certain UI components may serve as visual placeholders.
-- Functionality and usability improvements are ongoing.
-
-These limitations will be addressed as development progresses.
+- Responsive layout behavior during window resizing
+- Completing dashboard interactions
+- Refining navigation and widget behavior
+- Improving application stability and error handling
+- Testing across different screen resolutions
 
 ## Roadmap
 
 - [ ] Improve layout proportions during window resizing
-- [ ] Implement unfinished dashboard functionality
-- [ ] Improve navigation and widget interactions
-- [ ] Refine the UI across different window sizes
+- [ ] Complete unfinished dashboard functionality
+- [ ] Refine navigation and widget interactions
+- [ ] Improve consistency across window sizes
 - [ ] Improve error handling and application stability
-- [ ] Test the application across different screen resolutions
+- [ ] Test across different screen resolutions
 - [ ] Add screenshots and documentation
 
 ## What I'm Learning
@@ -98,11 +97,12 @@ These limitations will be addressed as development progresses.
 Through Veltrio, I'm exploring:
 
 - Building desktop applications with Python and PyQt5
-- Working with layouts, widgets, and size policies
+- Understanding Qt layouts, widgets, and size policies
 - Creating reusable UI components
-- Applying custom styling using Qt Style Sheets
-- Organizing project resources and application structure
-- Debugging layout behavior and improving usability
+- Managing icons and application resources
+- Applying custom styling with Qt Style Sheets
+- Debugging layout issues and improving usability
+- Structuring and maintaining a growing Python project
 
 ## License
 
@@ -110,4 +110,4 @@ No license has been specified yet.
 
 ---
 
-**Veltrio is a learning project and an ongoing experiment in desktop application development.**
+**Veltrio is a personal learning project and an ongoing experiment in desktop application development.**
