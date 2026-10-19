@@ -6,6 +6,7 @@ from PyQt5.QtCore import (Qt,
     QSettings,
     QDate,
     Qt,
+    QTimer
 )
 
 from PyQt5.QtGui import (
@@ -16,7 +17,7 @@ from PyQt5.QtGui import (
     QFontDatabase,
     QColor,
     QTextCharFormat, 
-    QBrush 
+    QBrush,
 )
 
 from PyQt5.QtWidgets import (
@@ -33,7 +34,7 @@ from PyQt5.QtWidgets import (
     QGraphicsDropShadowEffect,
     QSizePolicy,
     QCalendarWidget,
-    QToolButton 
+    QToolButton,
 )
 from PyQt5.QtWidgets import QTableView, QStyledItemDelegate
 from PyQt5.QtCore import QRectF
@@ -51,6 +52,53 @@ FONT_DIR = Path(__file__).parent / "Resources" / "Fonts" / "Amaranth,Nunito,Sign
 
 # Font configuration
 FONT_FAMILY = "Nunito"
+
+# Color palette
+color = {
+    # Main backgrounds
+    "background": "#F5F5F3",
+    "surface": "#FFFFFF",
+    "input_background": "#F5F5F3",
+
+    # Text
+    "text_primary": "#1F2421",
+    "text_secondary": "#5F6561",
+    "text_muted": "#777F79",
+    "text_subtle": "#9AA19C",
+    "text_disabled": "#B8C0BB",
+
+    # Teal accents
+    "accent": "#168F80",
+    "accent_hover": "#11796D",
+    "accent_pressed": "#0D5B52",
+    "accent_dark": "#0D6B60",
+
+    # Selection and hover
+    "selected_background": "#E3F1EE",
+    "hover_background": "#F1F3EE",
+    "hover_background_alt": "#F1F2F0",
+    "pressed_background": "#E1E9DF",
+    "selected_pressed": "#CFE7E2",
+
+    # Borders
+    "border": "#E5E9E6",
+    "border_hover": "#D5DED6",
+    "border_checkbox": "#C9D1CC",
+
+    # Task states
+    "task_text_completed": "#8A918C",
+
+    # Timer card
+    "timer_border": "#293641",
+    "timer_button": "#34434D",
+    "timer_button_hover": "#425660",
+    "timer_subtitle": "#A8B8BD",
+    "timer_disabled": "#A8CFC8",
+
+    # Utility
+    "white": "#FFFFFF",
+    "transparent": "transparent",
+}
 
 # UI Effects and Styles
 def add_card_shadow(widget):
@@ -81,7 +129,7 @@ class mainWindow(QMainWindow):
 
         # Configure the application window
         self.setWindowTitle("Veltrio")
-        icon_path = Path(__file__).parent / "Resources" / "Images_" / "veltrio.ico"
+        icon_path = Path(__file__).parent / "Resources" /"veltrio-icons" / "veltrio.ico"
         self.setWindowIcon(QIcon(str(icon_path)))
 
         self.initUI()
@@ -963,6 +1011,8 @@ class CalendarDateDelegate(QStyledItemDelegate):              # dunno how this w
 class Right_Bar(QWidget):
     def __init__(self):
         super().__init__()
+        self.timer = QTimer(self)
+        self.timer.setInterval(1000)  
         self.initUI()
 
     def initUI(self):
@@ -1032,7 +1082,9 @@ class Right_Bar(QWidget):
         self.minus_button = QPushButton("−")
         self.minus_button.setFixedSize(36, 36)
 
-        self.time_label = QLabel("25:00")
+        self.time = "15:00"
+        self.minutes, self.seconds = map(int, self.time.split(":"))
+        self.time_label = QLabel(f"{self.minutes:02} : {self.seconds:02}")
         self.time_label.setAlignment(Qt.AlignCenter)
         self.time_label.setMinimumWidth(150)
 
@@ -1066,11 +1118,83 @@ class Right_Bar(QWidget):
 
         right_bar_vbox.addWidget(self.calendar_container, 1)
         right_bar_vbox.addWidget(self.timer_widget, 1)
+        add_card_shadow(self.calendar_container)    
+        add_card_shadow(self.timer_widget)
 
         self.styleNavButtons()
         self.styleDateFormats()
         self.applyStyles()
         self.styleTimer()
+
+        self.plus_button.clicked.connect(self.increase_timer_time)
+        self.minus_button.clicked.connect(self.decrease_timer_time)
+        self.reset_button.clicked.connect(self.reset_timer_time)
+        self.timer.timeout.connect(self.update_timer)
+        self.start_button.clicked.connect(self.change_start_button_to_pause)
+
+    
+        
+
+    def increase_timer_time(self):
+        
+
+        if self.minutes >= 60:
+            self.plus_button.setEnabled(False)
+            self.minus_button.setEnabled(True)
+        else:
+            self.plus_button.setEnabled(True)
+            self.minus_button.setEnabled(True)
+            self.minutes +=5
+            self.time_label.setText(f"{self.minutes:02} : {self.seconds:02}")
+
+
+    def decrease_timer_time(self):
+
+
+        if self.minutes <= 5:
+            self.minus_button.setEnabled(False)
+            self.plus_button.setEnabled(True)
+
+        else:
+            self.minus_button.setEnabled(True)
+            self.plus_button.setEnabled(True)
+            self.minutes -= 5
+            self.time_label.setText(f"{self.minutes:02} : {self.seconds:02}")
+
+
+    def reset_timer_time(self):
+        self.timer.stop()
+        self.minutes = 15
+        self.seconds = 0
+        self.start_button.setText("▶")
+        self.time_label.setText(f"{self.minutes:02} : {self.seconds:02}")
+
+
+    def update_timer(self):
+
+        if self.minutes <= 0 and self.seconds <= 0:
+            self.timer.stop()
+            self.start_button.setText("▶")
+            self.time_label.setText(f"{self.minutes:02} : {self.seconds:02}")
+
+        elif self.seconds <= 0:
+            self.seconds = 59
+            self.minutes -= 1 
+            self.time_label.setText(f"{self.minutes:02} : {self.seconds:02}")  
+        else:
+            self.seconds -= 1
+            self.time_label.setText(f"{self.minutes:02} : {self.seconds:02}")
+        
+        
+
+    def change_start_button_to_pause(self):
+        if self.timer.isActive():
+            self.timer.stop()
+            self.start_button.setText("▶")
+
+        else:
+            self.timer.start()
+            self.start_button.setText("Ⅱ")
 
     def styleNavButtons(self):
         # Replace the default green circle arrows with clean text arrows
