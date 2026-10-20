@@ -38,9 +38,13 @@ from PyQt5.QtWidgets import (
     QTableView,
     QStyledItemDelegate,
     QStyle,
+    QStackedWidget
 )
 
 from veltrio_icons import VeltrioIcons
+from Stacked_Windows.Tasks_page import TasksPage
+from Stacked_Windows.Calendar_page import CalendarPage
+# from Stacked_Windows.Notes_page import NotesPage     
 
 
 # ---------------------------------------------------------------------------
@@ -180,15 +184,61 @@ class mainWindow(QMainWindow):
         main_vbox.addLayout(body_hbox, 1)
 
         # Sidebar
-        body_hbox.addWidget(SideBar(), 2)
+        self.sidebar = SideBar()
+        body_hbox.addWidget(self.sidebar, 2)
 
-        # Dashboard container
+        # Dashboard layout
         dashboard_hbox = QHBoxLayout()
-        body_hbox.addLayout(dashboard_hbox, 9)
-
-        # Dashboard sections
         dashboard_hbox.addWidget(Main_Display(), 6)
         dashboard_hbox.addWidget(Right_Bar(), 3)
+
+        # Dashboard page
+        self.dashboard_page = QWidget()
+        self.dashboard_page.setLayout(dashboard_hbox)
+
+        # Tasks page
+        self.tasks_page = TasksPage()
+
+        # Calendar page
+        self.calendar_page = CalendarPage()
+
+        # # Notes page
+        # self.notes_page = NotesPage()
+
+        # Stacked widget
+        self.changing_display_on_switch = QStackedWidget()
+        self.changing_display_on_switch.addWidget(self.dashboard_page)
+        self.changing_display_on_switch.addWidget(self.tasks_page)
+        self.changing_display_on_switch.addWidget(self.calendar_page)
+        # self.changing_display_on_switch.addWidget(self.notes_page)
+
+        # Connect sidebar buttons to switch pages
+        self.sidebar.Dashboard_button.clicked.connect(
+            lambda: self.changing_display_on_switch.setCurrentWidget(
+                self.dashboard_page
+            )   
+        )
+
+        self.sidebar.Tasks_button.clicked.connect(
+            lambda: self.changing_display_on_switch.setCurrentWidget(
+        self.tasks_page
+            )
+        )
+
+        self.sidebar.Calendar_button.clicked.connect(
+            lambda: self.changing_display_on_switch.setCurrentWidget(
+                self.calendar_page
+            )
+              )
+
+        self.sidebar.Notes_button.clicked.connect(
+            lambda: self.changing_display_on_switch.setCurrentWidget(
+                self.notes_page
+            )   
+        )   
+
+        # Add the stack to the body layout
+        body_hbox.addWidget(self.changing_display_on_switch, 9)
 
         # Set the initial window dimensions
         self.resize(1200, 1000)
@@ -443,6 +493,7 @@ class SideBar(QWidget):
         Dashboard_container = QWidget()
         dashboard_items_vbox = QVBoxLayout()
         dashboard_items_vbox.setSpacing(4)
+
         dashboard_items_vbox.addWidget(self.Dashboard_button)
         dashboard_items_vbox.addWidget(self.Tasks_button)
         dashboard_items_vbox.addWidget(self.Calendar_button)
