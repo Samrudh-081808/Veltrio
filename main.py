@@ -179,10 +179,16 @@ class mainWindow(QMainWindow):
         main_vbox.addWidget(Header(), 0)
         main_vbox.addLayout(body_hbox, 1)
 
-        # Add the sidebar, main display, and right sidebar
+        # Sidebar
         body_hbox.addWidget(SideBar(), 2)
-        body_hbox.addWidget(Main_Display(), 6)
-        body_hbox.addWidget(Right_Bar(), 3)
+
+        # Dashboard container
+        dashboard_hbox = QHBoxLayout()
+        body_hbox.addLayout(dashboard_hbox, 9)
+
+        # Dashboard sections
+        dashboard_hbox.addWidget(Main_Display(), 6)
+        dashboard_hbox.addWidget(Right_Bar(), 3)
 
         # Set the initial window dimensions
         self.resize(1200, 1000)
