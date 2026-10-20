@@ -10,6 +10,7 @@ from PyQt5.QtCore import (Qt,
     Qt,
     QTimer
 )
+from PyQt5.QtWidgets import QStackedWidget
 
 from PyQt5.QtGui import (
     QIcon,
@@ -31,12 +32,13 @@ from PyQt5.QtWidgets import (
     QHBoxLayout,
     QButtonGroup,
     QPushButton,
-    QLineEdit,
+    QLineEdit,      
     QCheckBox,
     QGraphicsDropShadowEffect,
     QSizePolicy,
     QCalendarWidget,
     QToolButton,
+    QFrame,
 )
 from PyQt5.QtWidgets import QTableView, QStyledItemDelegate
 from PyQt5.QtCore import QRectF
@@ -302,7 +304,7 @@ class TopBar(QWidget):
         VeltrioIcons.apply_stateful(self.profile_icon_button, "profile")
 
         self.applyStyles()
-        for w in (self.search_field,
+        for w in (self.search_field,    
             self.export_summary_button,
             self.switch_light_modes,
             self.notification_panel_open_button,
@@ -586,6 +588,14 @@ class Main_Display(QWidget):
         
         self.bottom_widget = QWidget()
         self.todays_tasks_label = QLabel("Today's Tasks")
+        self.heading_line = QFrame()
+        self.heading_line.setFixedSize(132, 2)
+        self.heading_line.setStyleSheet("""
+            QFrame {
+                background-color: #A8C5B5;
+                border: none;
+            }
+        """)
         self.today_task_1 = QWidget()
         self.today_task_2 = QWidget()
         self.today_task_3 = QWidget()
@@ -690,10 +700,11 @@ class Main_Display(QWidget):
 
         bottom_vbox = QVBoxLayout()
         bottom_vbox.setContentsMargins(16, 16, 16, 16)
-        bottom_vbox.setSpacing(12)
+        bottom_vbox.setSpacing(2)
         self.bottom_widget.setLayout(bottom_vbox)
 
         bottom_vbox.addWidget(self.todays_tasks_label)
+        bottom_vbox.addWidget(self.heading_line)
 
         for task_widget, task_name, location, time in [
             (self.today_task_1, "Complete Python project", "Inbox", "10:00 AM"),
@@ -720,9 +731,9 @@ class Main_Display(QWidget):
             task_hbox.addLayout(task_details_vbox, 1)
             task_hbox.addWidget(task_time_label)
 
-            bottom_vbox.addWidget(task_widget)
-
-        bottom_vbox.addStretch()
+            bottom_vbox.addWidget(task_widget , 1)
+        
+        
         self.no_more_tasks_label.setAlignment(Qt.AlignCenter)
         self.no_more_tasks_subtitle.setAlignment(Qt.AlignCenter)
 
@@ -924,10 +935,10 @@ class Main_Display(QWidget):
         # Today's Tasks container
         self.bottom_widget.setStyleSheet("""
             QWidget#bottom_widget {
-                background-color: #FFFFFF;
-                border: 1px solid #E5E9E6;
-                border-radius: 18px;
-            }
+            background-color: #FFFFFF;
+            border: 1px solid #E5E9E6;
+            border-radius: 18px;
+        }
         """)
         self.bottom_widget.setObjectName("bottom_widget")
 
@@ -940,8 +951,11 @@ class Main_Display(QWidget):
                 color: #1F2421;
                 background: transparent;
                 border: none;
+                padding: 0px 0px 10px 0px;
+                margin: 0px;
             }
         """)
+
 
         # Individual task rows
         for task_widget in [
@@ -951,12 +965,15 @@ class Main_Display(QWidget):
         ]:
             task_widget.setStyleSheet("""
                 QWidget {
-                    background-color: #FFFFFF;
-                    border: 1px solid #E5E9E6;
-                    border-radius: 12px;
-                    margin : 1px 0px;
+                    background: transparent;
+                    border: none;
+                    border-radius: 0px;
+                    margin: 0px;
+                    padding: 0px;
+                    border-bottom: 1px solid #E5E9E6;
                 }
             """)
+
 
         # Task checkboxes
         for checkbox in self.bottom_widget.findChildren(QCheckBox):
@@ -1003,6 +1020,7 @@ class Main_Display(QWidget):
                         color: #777F79;
                         background: transparent;
                         border: none;
+                        margin-left: 28px;
                     }
                 """)
         self.no_more_tasks_label.setStyleSheet("""
@@ -1026,6 +1044,7 @@ class Main_Display(QWidget):
                     border: none;
                 }
             """)
+        
 
 
 class CalendarDateDelegate(QStyledItemDelegate):              # dunno how this works i js wanted to fic the calendar selected cell not rendering rounded corners so i just copied this and it works
