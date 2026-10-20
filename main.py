@@ -1,26 +1,22 @@
-# Import necessary modules
-import sys
 from pathlib import Path
-from PyQt5.QtCore import QSize
-from veltrio_icons import VeltrioIcons
+import ctypes
 
-from PyQt5.QtCore import (Qt,
-    QSettings,
-    QDate,
+from PyQt5.QtCore import (
     Qt,
-    QTimer
+    QDate,
+    QRectF,
+    QTimer,
 )
-from PyQt5.QtWidgets import QStackedWidget
 
 from PyQt5.QtGui import (
     QIcon,
     QFont,
     QPixmap,
-    QImage,
     QFontDatabase,
     QColor,
-    QTextCharFormat, 
+    QTextCharFormat,
     QBrush,
+    QPainter,
 )
 
 from PyQt5.QtWidgets import (
@@ -32,22 +28,24 @@ from PyQt5.QtWidgets import (
     QHBoxLayout,
     QButtonGroup,
     QPushButton,
-    QLineEdit,      
+    QLineEdit,
     QCheckBox,
     QGraphicsDropShadowEffect,
     QSizePolicy,
     QCalendarWidget,
     QToolButton,
     QFrame,
+    QTableView,
+    QStyledItemDelegate,
+    QStyle,
 )
-from PyQt5.QtWidgets import QTableView, QStyledItemDelegate
-from PyQt5.QtCore import QRectF
-from PyQt5.QtGui import QPainter
-from PyQt5.QtWidgets import QStyle
 
-import ctypes
+from veltrio_icons import VeltrioIcons
 
 
+# ---------------------------------------------------------------------------
+# Constants
+# ---------------------------------------------------------------------------
 
 # UI dimensions
 SIDEBAR_W = 240
@@ -108,29 +106,38 @@ color = {
     "transparent": "transparent",
 }
 
-# UI Effects and Styles
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+# UI effects
 def add_card_shadow(widget):
     shadow = QGraphicsDropShadowEffect(widget)
     shadow.setBlurRadius(10)
     shadow.setOffset(0, 2)
-    shadow.setColor(QColor(0, 0, 0, 30))   
+    shadow.setColor(QColor(0, 0, 0, 30))
     widget.setGraphicsEffect(shadow)
+
 
 def add_control_shadow(widget):
     shadow = QGraphicsDropShadowEffect(widget)
     shadow.setBlurRadius(8)
     shadow.setOffset(0, 1)
-    shadow.setColor(QColor(0, 0, 0, 22))   
+    shadow.setColor(QColor(0, 0, 0, 22))
     widget.setGraphicsEffect(shadow)
 
-# Font loading 
+
+# Font loading
 def load_fonts():
     for ttf in FONT_DIR.glob("*.ttf"):
         QFontDatabase.addApplicationFont(str(ttf))
 
 
-
+# ---------------------------------------------------------------------------
 # Main application window
+# ---------------------------------------------------------------------------
+
 class mainWindow(QMainWindow):
 
     def __init__(self):
@@ -138,10 +145,10 @@ class mainWindow(QMainWindow):
 
         # Configure the application window
         self.setWindowTitle("Veltrio")
-        icon_path = Path(__file__).parent / "Resources" /"veltrio-icons" / "veltrio.ico"
+        icon_path = Path(__file__).parent / "Resources" / "veltrio-icons" / "veltrio.ico"
         self.setWindowIcon(QIcon(str(icon_path)))
 
-        # idk wtf this is but it makes the title bar teal
+        # Windows only: set the title bar color to the app background (#F5F5F3)
         DWMWA_CAPTION_COLOR = 35
 
         color = 0x00F3F5F5  # RGB #F5F5F3 in Windows COLORREF format
@@ -153,9 +160,7 @@ class mainWindow(QMainWindow):
             ctypes.sizeof(ctypes.c_int)
         )
 
-
         self.initUI()
-
 
     def initUI(self):
         # Set up the main window background
@@ -169,7 +174,7 @@ class mainWindow(QMainWindow):
         main_vbox = QVBoxLayout()
         central_widget.setLayout(main_vbox)
 
-        # Arrange the header and main content horizontally
+        # Header on top, body (sidebar / main display / right bar) below
         body_hbox = QHBoxLayout()
         main_vbox.addWidget(Header(), 0)
         main_vbox.addLayout(body_hbox, 1)
@@ -186,6 +191,10 @@ class mainWindow(QMainWindow):
         # self.setMaximumSize(1200, 750)
         self.setMinimumSize(1400, 1000)
 
+
+# ---------------------------------------------------------------------------
+# Header
+# ---------------------------------------------------------------------------
 
 class Header(QWidget):
 
@@ -287,7 +296,7 @@ class TopBar(QWidget):
     def initUI(self):
         topbar_hbox = QHBoxLayout()
         topbar_hbox.setContentsMargins(0, 0, 0, 0)
-        topbar_hbox.setSpacing(12)  
+        topbar_hbox.setSpacing(12)
         self.setLayout(topbar_hbox)
 
         topbar_hbox.addWidget(self.search_field)
@@ -304,11 +313,13 @@ class TopBar(QWidget):
         VeltrioIcons.apply_stateful(self.profile_icon_button, "profile")
 
         self.applyStyles()
-        for w in (self.search_field,    
+        for w in (
+            self.search_field,
             self.export_summary_button,
             self.switch_light_modes,
             self.notification_panel_open_button,
-            self.profile_icon_button):
+            self.profile_icon_button
+        ):
             add_control_shadow(w)
 
         self.search_field.addAction(
@@ -384,19 +395,23 @@ class TopBar(QWidget):
         """)
 
 
+# ---------------------------------------------------------------------------
+# Left sidebar
+# ---------------------------------------------------------------------------
+
 class SideBar(QWidget):
 
     def __init__(self):
         super().__init__()
         self.setFixedWidth(SIDEBAR_W)
+
         # Dashboard and stuff
         self.Dashboard_button = QPushButton(" Dashboard", self)
         self.Tasks_button = QPushButton(" Tasks", self)
         self.Calendar_button = QPushButton(" Calendar", self)
         self.Notes_button = QPushButton(" Notes", self)
 
-
-        # List Area
+        # List area
         self.my_list_label = QLabel("My Lists", self)
         self.add_new_list_button = QPushButton("+", self)
         self.Inbox_button = QPushButton(" Inbox", self)
@@ -405,7 +420,7 @@ class SideBar(QWidget):
         self.Health = QPushButton(" Health", self)
         self.Holiday_trip_button = QPushButton(" Holiday Trip", self)
 
-        #Workspace Area
+        # Workspace area
         self.Workspace_label = QLabel("Workspaces", self)
         self.add_new_workspace_button = QPushButton("+", self)
         self.add_sample_workspace_button_1 = QPushButton(" Workspace 1", self)
@@ -418,7 +433,7 @@ class SideBar(QWidget):
         sidebar_vbox.setContentsMargins(12, 16, 12, 16)
         self.setLayout(sidebar_vbox)
 
-        #Dashboard and stuff
+        # Dashboard and stuff
         Dashboard_container = QWidget()
         dashboard_items_vbox = QVBoxLayout()
         dashboard_items_vbox.setSpacing(4)
@@ -429,9 +444,7 @@ class SideBar(QWidget):
         Dashboard_container.setLayout(dashboard_items_vbox)
         sidebar_vbox.addWidget(Dashboard_container)
 
-
-        # List Area
-
+        # List area
         list_items_container = QWidget()
         list_items_vbox = QVBoxLayout()
         list_items_vbox.setSpacing(4)
@@ -448,11 +461,7 @@ class SideBar(QWidget):
         list_items_container.setLayout(list_items_vbox)
         sidebar_vbox.addWidget(list_items_container)
 
-
-
-
-
-        # Workspace Area
+        # Workspace area
         workspace_items_container = QWidget()
         workspace_name_hbox = QHBoxLayout()
         workspace_name_hbox.addWidget(self.Workspace_label)
@@ -471,7 +480,7 @@ class SideBar(QWidget):
         add_card_shadow(workspace_items_container)
 
         sidebar_vbox.addStretch(1)
-        
+
         nav_buttons = [
             self.Dashboard_button,
             self.Tasks_button,
@@ -494,7 +503,6 @@ class SideBar(QWidget):
             self.nav_group.addButton(button)
         self.Dashboard_button.setChecked(True)
 
-        
         # Sidebar icons
         VeltrioIcons.apply_stateful(self.Dashboard_button, "dashboard")
         VeltrioIcons.apply_stateful(self.Tasks_button, "tasks")
@@ -505,11 +513,10 @@ class SideBar(QWidget):
         VeltrioIcons.apply_stateful(self.Study, "study")
         VeltrioIcons.apply_stateful(self.Health, "health")
         VeltrioIcons.apply_stateful(self.Holiday_trip_button, "holiday_trip")
-        VeltrioIcons.apply_stateful(self.add_sample_workspace_button_1,"workspace")
-        VeltrioIcons.apply_stateful(self.add_sample_workspace_button_2,"workspace")
+        VeltrioIcons.apply_stateful(self.add_sample_workspace_button_1, "workspace")
+        VeltrioIcons.apply_stateful(self.add_sample_workspace_button_2, "workspace")
 
         self.applyStyles()
-
 
     def applyStyles(self):
         self.setStyleSheet("""
@@ -552,10 +559,16 @@ class SideBar(QWidget):
         """)
 
 
+# ---------------------------------------------------------------------------
+# Main display (greeting, add-task bar, today's tasks)
+# ---------------------------------------------------------------------------
+
 class Main_Display(QWidget):
 
     def __init__(self):
         super().__init__()
+
+        # Top section: greeting + "Up Next" card
         self.top_widget = QWidget()
         self.greeting_widget = QWidget()
         self.greeting_label = QLabel("Good Morning, Rudy")
@@ -566,13 +579,12 @@ class Main_Display(QWidget):
         self.task_widget_1 = QWidget()
         self.task_name_1 = QLabel("Task Name Placeholder")
         self.task_time_1 = QLabel("Task Time Placeholder")
-        
+
         self.task_widget_2 = QWidget()
         self.task_name_2 = QLabel("Task Name Placeholder")
         self.task_time_2 = QLabel("Task Time Placeholder")
 
-        
-
+        # Middle section: add-task input and date buttons
         self.middle_widget = QWidget()
         self.add_task_input = QLineEdit()
         self.send_task_button = QPushButton()
@@ -582,10 +594,9 @@ class Main_Display(QWidget):
         self.next_week_button = QPushButton(" Next week")
         self.custom_button = QPushButton(" Custom")
         self.date_button_group = QButtonGroup(self)
-        self.date_button_group.setExclusive(True)   
-        
-        
-        
+        self.date_button_group.setExclusive(True)
+
+        # Bottom section: today's tasks
         self.bottom_widget = QWidget()
         self.todays_tasks_label = QLabel("Today's Tasks")
         self.heading_line = QFrame()
@@ -610,6 +621,7 @@ class Main_Display(QWidget):
         main_display_vbox.addWidget(self.middle_widget, 1)
         main_display_vbox.addWidget(self.bottom_widget, 3)
 
+        # Top section
         topwidget_hbox = QHBoxLayout()
         self.top_widget.setLayout(topwidget_hbox)
 
@@ -646,15 +658,15 @@ class Main_Display(QWidget):
         self.task_widget_1.setFixedHeight(75)
         self.task_widget_2.setFixedHeight(75)
 
-        topwidget_hbox.addWidget(self.greeting_widget , 3)
-        topwidget_hbox.addWidget(self.up_next_widget, 2 , alignment=Qt.AlignBottom)
+        topwidget_hbox.addWidget(self.greeting_widget, 3)
+        topwidget_hbox.addWidget(self.up_next_widget, 2, alignment=Qt.AlignBottom)
         self.top_widget.setObjectName("top_widget")
 
+        # Middle section
         middle_vbox = QVBoxLayout()
         middle_vbox.setContentsMargins(12, 8, 12, 8)
         middle_vbox.setSpacing(10)
         self.middle_widget.setLayout(middle_vbox)
-
 
         input_hbox = QHBoxLayout()
         input_hbox.setSpacing(10)
@@ -697,7 +709,7 @@ class Main_Display(QWidget):
         VeltrioIcons.apply_stateful(self.next_week_button, "date_next_week")
         VeltrioIcons.apply_stateful(self.custom_button, "date_custom")
 
-
+        # Bottom section
         bottom_vbox = QVBoxLayout()
         bottom_vbox.setContentsMargins(16, 16, 16, 16)
         bottom_vbox.setSpacing(2)
@@ -731,9 +743,8 @@ class Main_Display(QWidget):
             task_hbox.addLayout(task_details_vbox, 1)
             task_hbox.addWidget(task_time_label)
 
-            bottom_vbox.addWidget(task_widget , 1)
-        
-        
+            bottom_vbox.addWidget(task_widget, 1)
+
         self.no_more_tasks_label.setAlignment(Qt.AlignCenter)
         self.no_more_tasks_subtitle.setAlignment(Qt.AlignCenter)
 
@@ -742,10 +753,8 @@ class Main_Display(QWidget):
         bottom_vbox.addWidget(self.no_more_tasks_subtitle)
         self.applyStyles()
 
-
-
-    
     def applyStyles(self):
+        # Top section
         self.top_widget.setStyleSheet("""
             QWidget#top_widget {
                 border-image: url("Resources/Images_/Pastel Mint Landscape with Lake and Birds.png") 0 0 0 0 stretch stretch;
@@ -757,7 +766,7 @@ class Main_Display(QWidget):
                 border-radius: 20px;
             }
         """)
-        self.greeting_widget.setAttribute(Qt.WA_StyledBackground, True) 
+        self.greeting_widget.setAttribute(Qt.WA_StyledBackground, True)
         self.greeting_widget.setStyleSheet("""
             QWidget {
                 background-color: transparent;
@@ -810,7 +819,7 @@ class Main_Display(QWidget):
                     border-left: 4px solid #168F80;
                     border-radius: 1px;
                 }
-        """)
+            """)
         self.task_name_1.setStyleSheet("""
             QLabel {
                 border: none;
@@ -866,25 +875,6 @@ class Main_Display(QWidget):
             }
         """)
 
-        # Send button
-        self.send_task_button.setStyleSheet("""
-            QPushButton {
-                background-color: #168F80;
-                color: white;
-                border: none;
-                border-radius: 24px;
-                min-width: 44px;
-                max-width: 44px;
-                min-height: 44px;
-                max-height: 44px;
-                font-size: 18px;
-            }
-
-            QPushButton:hover {
-                background-color: #11796D;
-            }
-        """)
-
         # Date and list buttons
         for button in [
             self.list_button,
@@ -918,27 +908,28 @@ class Main_Display(QWidget):
                 }
             """)
 
+        # Send button
         self.send_task_button.setStyleSheet("""
-                QPushButton {
-                    background-color: #168F80;
-                    color: white;
-                    border: none;
-                    border-radius: 22px;
-                    min-width: 44px;
-                    max-width: 44px;
-                    min-height: 44px;   
-                    max-height: 44px;
-                    font-size: 18px;
-                }
-            """)
+            QPushButton {
+                background-color: #168F80;
+                color: white;
+                border: none;
+                border-radius: 22px;
+                min-width: 44px;
+                max-width: 44px;
+                min-height: 44px;
+                max-height: 44px;
+                font-size: 18px;
+            }
+        """)
 
         # Today's Tasks container
         self.bottom_widget.setStyleSheet("""
             QWidget#bottom_widget {
-            background-color: #FFFFFF;
-            border: 1px solid #E5E9E6;
-            border-radius: 18px;
-        }
+                background-color: #FFFFFF;
+                border: 1px solid #E5E9E6;
+                border-radius: 18px;
+            }
         """)
         self.bottom_widget.setObjectName("bottom_widget")
 
@@ -956,7 +947,6 @@ class Main_Display(QWidget):
             }
         """)
 
-
         # Individual task rows
         for task_widget in [
             self.today_task_1,
@@ -973,7 +963,6 @@ class Main_Display(QWidget):
                     border-bottom: 1px solid #E5E9E6;
                 }
             """)
-
 
         # Task checkboxes
         for checkbox in self.bottom_widget.findChildren(QCheckBox):
@@ -1023,31 +1012,38 @@ class Main_Display(QWidget):
                         margin-left: 28px;
                     }
                 """)
+
+        # Empty-state labels (applied after the loop above so they take precedence)
         self.no_more_tasks_label.setStyleSheet("""
-                QLabel {
-                    font-family: Nunito;
-                    font-size: 14px;
-                    font-weight: 600;
-                    color: #5F6561;
-                    background: transparent;
-                    border: none;
-                }
-            """)
+            QLabel {
+                font-family: Nunito;
+                font-size: 14px;
+                font-weight: 600;
+                color: #5F6561;
+                background: transparent;
+                border: none;
+            }
+        """)
 
         self.no_more_tasks_subtitle.setStyleSheet("""
-                QLabel {
-                    font-family: Nunito;
-                    font-size: 12px;
-                    font-weight: 400;
-                    color: #9AA19C;
-                    background: transparent;
-                    border: none;
-                }
-            """)
-        
+            QLabel {
+                font-family: Nunito;
+                font-size: 12px;
+                font-weight: 400;
+                color: #9AA19C;
+                background: transparent;
+                border: none;
+            }
+        """)
 
 
-class CalendarDateDelegate(QStyledItemDelegate):              # dunno how this works i js wanted to fic the calendar selected cell not rendering rounded corners so i just copied this and it works
+# ---------------------------------------------------------------------------
+# Right bar (calendar + focus timer)
+# ---------------------------------------------------------------------------
+
+# Paints the selected calendar cell as a rounded teal square
+class CalendarDateDelegate(QStyledItemDelegate):
+
     def paint(self, painter, option, index):
         painter.save()
 
@@ -1072,10 +1068,11 @@ class CalendarDateDelegate(QStyledItemDelegate):              # dunno how this w
 
 
 class Right_Bar(QWidget):
+
     def __init__(self):
         super().__init__()
         self.timer = QTimer(self)
-        self.timer.setInterval(1000)  
+        self.timer.setInterval(1000)
         self.initUI()
 
     def initUI(self):
@@ -1110,7 +1107,6 @@ class Right_Bar(QWidget):
         # VeltrioIcons.apply(self.calendar.findChild(QToolButton, "qt_calendar_nextmonth"), "next")
 
         calendar_layout.addWidget(self.calendar)
-        calendar_layout.addWidget(self.calendar)
 
         self.timer_widget = QWidget()
         self.timer_widget.setObjectName("TimerCard")
@@ -1120,7 +1116,6 @@ class Right_Bar(QWidget):
         timer_vbox.setContentsMargins(20, 20, 20, 20)
         timer_vbox.setSpacing(18)
 
-        # Title
         # Timer heading and subtitle
         self.timer_heading = QLabel()
         self.timer_heading.setTextFormat(Qt.RichText)
@@ -1183,9 +1178,8 @@ class Right_Bar(QWidget):
 
         right_bar_vbox.addWidget(self.calendar_container, 1)
         right_bar_vbox.addWidget(self.timer_widget, 1)
-        add_card_shadow(self.calendar_container)    
+        add_card_shadow(self.calendar_container)
         add_card_shadow(self.timer_widget)
-
 
         VeltrioIcons.apply(self.start_button, "timer_start")
         VeltrioIcons.apply(self.reset_button, "timer_reset")
@@ -1203,11 +1197,8 @@ class Right_Bar(QWidget):
         self.timer.timeout.connect(self.update_timer)
         self.start_button.clicked.connect(self.change_start_button_to_pause)
 
-    
-        
-
+    # Timer logic
     def increase_timer_time(self):
-        
 
         if self.minutes >= 60:
             self.plus_button.setEnabled(False)
@@ -1215,12 +1206,10 @@ class Right_Bar(QWidget):
         else:
             self.plus_button.setEnabled(True)
             self.minus_button.setEnabled(True)
-            self.minutes +=5
+            self.minutes += 5
             self.time_label.setText(f"{self.minutes:02} : {self.seconds:02}")
 
-
     def decrease_timer_time(self):
-
 
         if self.minutes <= 5:
             self.minus_button.setEnabled(False)
@@ -1232,14 +1221,12 @@ class Right_Bar(QWidget):
             self.minutes -= 5
             self.time_label.setText(f"{self.minutes:02} : {self.seconds:02}")
 
-
     def reset_timer_time(self):
         self.timer.stop()
         self.minutes = 15
         self.seconds = 0
         VeltrioIcons.apply(self.start_button, "timer_start")
         self.time_label.setText(f"{self.minutes:02} : {self.seconds:02}")
-
 
     def update_timer(self):
 
@@ -1250,13 +1237,11 @@ class Right_Bar(QWidget):
 
         elif self.seconds <= 0:
             self.seconds = 59
-            self.minutes -= 1 
-            self.time_label.setText(f"{self.minutes:02} : {self.seconds:02}")  
+            self.minutes -= 1
+            self.time_label.setText(f"{self.minutes:02} : {self.seconds:02}")
         else:
             self.seconds -= 1
             self.time_label.setText(f"{self.minutes:02} : {self.seconds:02}")
-        
-        
 
     def change_start_button_to_pause(self):
         if self.timer.isActive():
@@ -1267,10 +1252,11 @@ class Right_Bar(QWidget):
             self.timer.start()
             VeltrioIcons.apply(self.start_button, "timer_pause")
 
+    # Calendar styling
     def styleNavButtons(self):
         # Replace the default green circle arrows with clean text arrows
         for name, text in (("qt_calendar_prevmonth", "‹"),
-                        ("qt_calendar_nextmonth", "›")):
+                           ("qt_calendar_nextmonth", "›")):
             btn = self.calendar.findChild(QToolButton, name)
             if btn:
                 btn.setIcon(QIcon())
@@ -1279,7 +1265,7 @@ class Right_Bar(QWidget):
                 btn.setCursor(Qt.PointingHandCursor)
 
     def styleDateFormats(self):
-        # Header (Sun, Mon, ...) 
+        # Header (Sun, Mon, ...)
         header_fmt = QTextCharFormat()
         header_fmt.setForeground(QBrush(QColor("#5F6561")))
         header_fmt.setFontWeight(QFont.DemiBold)
@@ -1398,9 +1384,10 @@ class Right_Bar(QWidget):
             QCalendarWidget QAbstractItemView:disabled {
                 color: #B8C0BB;
             }
-            
+
         """)
 
+    # Timer card styling
     def styleTimer(self):
         self.timer_widget.setStyleSheet("""
             QWidget#TimerCard {
@@ -1491,15 +1478,21 @@ class Right_Bar(QWidget):
         self.start_button.setStyleSheet(button_style)
         self.reset_button.setStyleSheet(button_style)
 
+
+# ---------------------------------------------------------------------------
+# Entry point
+# ---------------------------------------------------------------------------
+
 def main():
     app = QApplication([])
-    load_fonts()                                   
+    load_fonts()
     font = QFont(FONT_FAMILY)
     font.setPixelSize(14)
     app.setFont(font)
     window = mainWindow()
     window.show()
     app.exec_()
+
 
 if __name__ == "__main__":
     main()
