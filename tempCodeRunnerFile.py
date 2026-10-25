@@ -1,1 +1,2 @@
-from veltrio_icons import VeltrioIcons
+
+        card.setObjectName("BrandCard")

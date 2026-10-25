@@ -1,55 +1,73 @@
-
 from PyQt5.QtCore import Qt, QRectF, QDate
-from PyQt5.QtGui import QColor, QPainter, QFont
+from PyQt5.QtGui import (
+    QColor,
+    QPainter,
+    QFont,
+    QIcon,
+    QTextCharFormat,
+    QBrush,
+)
 from PyQt5.QtWidgets import (
     QWidget,
     QLabel,
     QVBoxLayout,
     QHBoxLayout,
-    QFrame,
     QCalendarWidget,
     QStyledItemDelegate,
     QStyle,
     QTableView,
+    QToolButton,
     QPushButton,
     QGraphicsDropShadowEffect,
 )
 
 
-PALETTE = {
-    "background": "#FFFFFF",
-    "surface": "#FFFFFF",
-    "text": "#303A36",
-    "muted_text": "#659B86",
-    "accent": "#168F80",
-    "border": "#E1E7E3",
-    "soft_green": "#EDF0E7",
-    "hover": "#F4F7F4",
-}
+# ---------------------------------------------------------------------------
+# Layout scale (one set of numbers used everywhere on this page)
+# ---------------------------------------------------------------------------
 
+PAGE_MARGIN_X = 18
+PAGE_MARGIN_Y = 16
+GAP = 16               # between page header, cards, and card contents
+CARD_PAD = 20          # inner padding of every card
+CARD_HEADER_H = 32     # every card header row has the same height
+
+
+# ---------------------------------------------------------------------------
+# Helpers (same shadow as main.py)
+# ---------------------------------------------------------------------------
 
 def add_card_shadow(widget):
     shadow = QGraphicsDropShadowEffect(widget)
-    shadow.setBlurRadius(8)
-    shadow.setOffset(0, 1)
-    shadow.setColor(QColor(0, 0, 0, 22))
+    shadow.setBlurRadius(10)
+    shadow.setOffset(0, 2)
+    shadow.setColor(QColor(0, 0, 0, 30))
     widget.setGraphicsEffect(shadow)
 
 
-def create_card():
-    card = QFrame()
-    card.setObjectName("CalendarCard")
-    card.setStyleSheet("""
-        QFrame#CalendarCard {
-            background-color: #FFFFFF;
-            border: 1px solid #E1E7E3;
-            border-radius: 16px;
-        }
-    """)
+def create_card(object_name):
+    card = QWidget()
+    card.setObjectName(object_name)
+    card.setAttribute(Qt.WA_StyledBackground, True)
     add_card_shadow(card)
     return card
 
 
+def create_label(text, object_name, wrap=False, center=False):
+    label = QLabel(text)
+    label.setObjectName(object_name)
+    if wrap:
+        label.setWordWrap(True)
+    if center:
+        label.setAlignment(Qt.AlignCenter)
+    return label
+
+
+# ---------------------------------------------------------------------------
+# Calendar cell painter (identical to main.py)
+# ---------------------------------------------------------------------------
+
+# Paints the selected calendar cell as a rounded teal square
 class CalendarDateDelegate(QStyledItemDelegate):
 
     def paint(self, painter, option, index):
@@ -57,11 +75,10 @@ class CalendarDateDelegate(QStyledItemDelegate):
 
         if option.state & QStyle.State_Selected:
             painter.setRenderHint(QPainter.Antialiasing)
-
             rect = QRectF(option.rect).adjusted(3, 3, -3, -3)
 
             painter.setPen(Qt.NoPen)
-            painter.setBrush(QColor(PALETTE["accent"]))
+            painter.setBrush(QColor("#168F80"))
             painter.drawRoundedRect(rect, 7, 7)
 
             painter.setPen(QColor("#FFFFFF"))
@@ -71,25 +88,14 @@ class CalendarDateDelegate(QStyledItemDelegate):
                 str(index.data())
             )
         else:
-            painter.setRenderHint(QPainter.Antialiasing)
-
-            if option.state & QStyle.State_MouseOver:
-                rect = QRectF(option.rect).adjusted(4, 4, -4, -4)
-                painter.setPen(Qt.NoPen)
-                painter.setBrush(QColor(PALETTE["hover"]))
-                painter.drawRoundedRect(rect, 7, 7)
-
-                painter.setPen(QColor(PALETTE["text"]))
-                painter.drawText(
-                    option.rect,
-                    Qt.AlignCenter,
-                    str(index.data())
-                )
-            else:
-                super().paint(painter, option, index)
+            super().paint(painter, option, index)
 
         painter.restore()
 
+
+# ---------------------------------------------------------------------------
+# Calendar page
+# ---------------------------------------------------------------------------
 
 class CalendarPage(QWidget):
 
@@ -98,203 +104,160 @@ class CalendarPage(QWidget):
 
         self.setObjectName("CalendarPage")
         self.setAttribute(Qt.WA_StyledBackground, True)
-        self.setStyleSheet("""
-            QWidget#CalendarPage {
-                background-color: #FFFFFF;
-            }
-        """)
 
         self.initUI()
+        self.styleNavButtons()
+        self.styleDateFormats()
+        self.applyStyles()
+        self.styleCalendar()
+
+        self.today_button.clicked.connect(self.go_to_today)
+
+    # ---------------- layout ----------------
 
     def initUI(self):
-
-        # Main page layout
         main_layout = QVBoxLayout(self)
-        main_layout.setContentsMargins(28, 24, 28, 24)
-        main_layout.setSpacing(22)
+        main_layout.setContentsMargins(
+            PAGE_MARGIN_X, PAGE_MARGIN_Y, PAGE_MARGIN_X, PAGE_MARGIN_Y
+        )
+        main_layout.setSpacing(GAP)
 
-        # --------------------------------------------------
         # Page heading
-        # --------------------------------------------------
-
         heading_layout = QVBoxLayout()
-        heading_layout.setSpacing(5)
-
-        title = QLabel("Calendar")
-        title.setFont(QFont("Segoe UI", 25, QFont.Bold))
-        title.setStyleSheet(f"""
-            color: {PALETTE["text"]};
-            background: transparent;
-            border: none;
-        """)
-
-        subtitle = QLabel("A clearer view of your days.")
-        subtitle.setFont(QFont("Segoe UI", 11))
-        subtitle.setStyleSheet(f"""
-            color: {PALETTE["muted_text"]};
-            background: transparent;
-            border: none;
-        """)
-
-        heading_layout.addWidget(title)
-        heading_layout.addWidget(subtitle)
-
+        heading_layout.setSpacing(4)
+        heading_layout.addWidget(create_label("Calendar", "PageTitle"))
+        heading_layout.addWidget(
+            create_label("A clearer view of your days.", "PageSubtitle")
+        )
         main_layout.addLayout(heading_layout)
 
-        # --------------------------------------------------
-        # Main content: left features + right calendar
-        # --------------------------------------------------
-
+        # Content: calendar (left) + coming soon (right)
         content_layout = QHBoxLayout()
-        content_layout.setSpacing(22)
+        content_layout.setSpacing(GAP)
 
-        # ================= LEFT SECTION ===================
+        self.calendar_card = self.build_calendar_card()
+        self.features_card = self.build_features_card()
 
-        self.features_card = create_card()
+        content_layout.addWidget(self.calendar_card, 6)
+        content_layout.addWidget(self.features_card, 4)
 
-        features_layout = QVBoxLayout(self.features_card)
-        features_layout.setContentsMargins(24, 24, 24, 24)
-        features_layout.setSpacing(14)
+        main_layout.addLayout(content_layout, 1)
 
-        features_heading = QLabel("Coming Soon")
-        features_heading.setFont(QFont("Segoe UI", 20, QFont.Bold))
-        features_heading.setStyleSheet(f"""
-            color: {PALETTE["text"]};
-            background: transparent;
-            border: none;
-        """)
+    def build_calendar_card(self):
+        card = create_card("ScheduleCard")
 
-        features_subtitle = QLabel(
-            "More ways to plan your time are on the way."
-        )
-        features_subtitle.setWordWrap(True)
-        features_subtitle.setFont(QFont("Segoe UI", 11))
-        features_subtitle.setStyleSheet(f"""
-            color: {PALETTE["muted_text"]};
-            background: transparent;
-            border: none;
-            line-height: 150%;
-        """)
+        layout = QVBoxLayout(card)
+        layout.setContentsMargins(CARD_PAD, CARD_PAD, CARD_PAD, CARD_PAD)
+        layout.setSpacing(GAP)
 
-        # Coming soon placeholder
-        self.features_placeholder = QWidget()
-        self.features_placeholder.setAttribute(
-            Qt.WA_StyledBackground, True
-        )
-        self.features_placeholder.setStyleSheet("""
-            QWidget {
-                background-color: #F4F7F4;
-                border: 1px dashed #D5DFD9;
-                border-radius: 12px;
-            }
-        """)
+        # Header row: title + Today button
+        header_row = QHBoxLayout()
+        header_row.setSpacing(12)
 
-        placeholder_layout = QVBoxLayout(self.features_placeholder)
-        placeholder_layout.setContentsMargins(20, 24, 20, 24)
-        placeholder_layout.setSpacing(10)
-        placeholder_layout.setAlignment(Qt.AlignCenter)
-
-        placeholder_icon = QLabel("✦")
-        placeholder_icon.setAlignment(Qt.AlignCenter)
-        placeholder_icon.setFont(QFont("Segoe UI", 30, QFont.Bold))
-        placeholder_icon.setStyleSheet("""
-            color: #168F80;
-            background: transparent;
-            border: none;
-        """)
-
-        placeholder_title = QLabel("Something new is coming")
-        placeholder_title.setAlignment(Qt.AlignCenter)
-        placeholder_title.setWordWrap(True)
-        placeholder_title.setFont(QFont("Segoe UI", 13, QFont.Bold))
-        placeholder_title.setStyleSheet("""
-            color: #303A36;
-            background: transparent;
-            border: none;
-        """)
-
-        placeholder_subtitle = QLabel(
-            "We're making space for more useful features."
-        )
-        placeholder_subtitle.setAlignment(Qt.AlignCenter)
-        placeholder_subtitle.setWordWrap(True)
-        placeholder_subtitle.setFont(QFont("Segoe UI", 10))
-        placeholder_subtitle.setStyleSheet("""
-            color: #659B86;
-            background: transparent;
-            border: none;
-        """)
-
-        placeholder_layout.addWidget(placeholder_icon)
-        placeholder_layout.addWidget(placeholder_title)
-        placeholder_layout.addWidget(placeholder_subtitle)
-
-        features_layout.addWidget(features_heading)
-        features_layout.addWidget(features_subtitle)
-        features_layout.addSpacing(8)
-        features_layout.addWidget(self.features_placeholder, 1)
-        features_layout.addStretch()
-
-        # ================= RIGHT SECTION ==================
-
-        self.calendar_card = create_card()
-
-        calendar_layout = QVBoxLayout(self.calendar_card)
-        calendar_layout.setContentsMargins(20, 20, 20, 20)
-        calendar_layout.setSpacing(16)
-
-        # Calendar heading row
-        calendar_heading_row = QHBoxLayout()
-        calendar_heading_row.setSpacing(10)
-
-        calendar_heading = QLabel("Your Schedule")
-        calendar_heading.setFont(QFont("Segoe UI", 17, QFont.Bold))
-        calendar_heading.setStyleSheet(f"""
-            color: {PALETTE["text"]};
-            background: transparent;
-            border: none;
-        """)
-
-        calendar_heading_row.addWidget(calendar_heading)
-        calendar_heading_row.addStretch()
+        heading = create_label("Your Schedule", "CardTitle")
+        heading.setMinimumHeight(CARD_HEADER_H)
 
         self.today_button = QPushButton("Today")
+        self.today_button.setObjectName("TodayButton")
         self.today_button.setCursor(Qt.PointingHandCursor)
-        self.today_button.setFixedHeight(34)
-        self.today_button.setStyleSheet("""
-            QPushButton {
-                background-color: #EDF0E7;
-                color: #168F80;
-                border: none;
-                border-radius: 8px;
-                padding: 0 14px;
-                font-size: 12px;
-                font-weight: 600;
-            }
-            QPushButton:hover {
-                background-color: #DDE8DF;
-            }
-            QPushButton:pressed {
-                background-color: #D1E0D6;
-            }
-        """)
+        self.today_button.setFixedHeight(CARD_HEADER_H)
 
-        calendar_heading_row.addWidget(self.today_button)
-        calendar_layout.addLayout(calendar_heading_row)
+        header_row.addWidget(heading)
+        header_row.addStretch()
+        header_row.addWidget(self.today_button)
+        layout.addLayout(header_row)
 
-        # Actual calendar
+        # Calendar (same configuration as main.py)
         self.calendar = QCalendarWidget()
-        self.calendar.setMinimumHeight(370)
-        self.calendar.setVerticalHeaderFormat(
-            QCalendarWidget.NoVerticalHeader
-        )
-        self.calendar.setHorizontalHeaderFormat(
-            QCalendarWidget.ShortDayNames
-        )
+        self.calendar.setVerticalHeaderFormat(QCalendarWidget.NoVerticalHeader)
+        self.calendar.setHorizontalHeaderFormat(QCalendarWidget.ShortDayNames)
         self.calendar.setGridVisible(False)
         self.calendar.setNavigationBarVisible(True)
-        self.calendar.setFirstDayOfWeek(Qt.Monday)
+        self.calendar_view = self.calendar.findChild(QTableView)
+        self.calendar_delegate = CalendarDateDelegate(self.calendar_view)
+        self.calendar_view.setItemDelegate(self.calendar_delegate)
 
+        layout.addWidget(self.calendar, 1)
+        return card
+
+    def build_features_card(self):
+        card = create_card("FeaturesCard")
+
+        layout = QVBoxLayout(card)
+        layout.setContentsMargins(CARD_PAD, CARD_PAD, CARD_PAD, CARD_PAD)
+        layout.setSpacing(GAP)
+
+        heading = create_label("Coming Soon", "CardTitle")
+        heading.setMinimumHeight(CARD_HEADER_H)
+
+        subtitle = create_label(
+            "More ways to plan your time are on the way.",
+            "CardSubtitle",
+            wrap=True,
+        )
+
+        # Placeholder box
+        placeholder = QWidget()
+        placeholder.setObjectName("Placeholder")
+        placeholder.setAttribute(Qt.WA_StyledBackground, True)
+
+        placeholder_layout = QVBoxLayout(placeholder)
+        placeholder_layout.setContentsMargins(CARD_PAD, CARD_PAD, CARD_PAD, CARD_PAD)
+        placeholder_layout.setSpacing(8)
+        placeholder_layout.setAlignment(Qt.AlignCenter)
+
+        placeholder_layout.addWidget(
+            create_label("✦", "PlaceholderIcon", center=True)
+        )
+        placeholder_layout.addWidget(
+            create_label("Something new is coming", "PlaceholderTitle",
+                         wrap=True, center=True)
+        )
+        placeholder_layout.addWidget(
+            create_label("We're making space for more useful features.",
+                         "PlaceholderText", wrap=True, center=True)
+        )
+
+        layout.addWidget(heading)
+        layout.addWidget(subtitle)
+        layout.addWidget(placeholder, 1)
+        return card
+
+    # ---------------- calendar styling (same as main.py) ----------------
+
+    def styleNavButtons(self):
+        # Replace the default green circle arrows with clean text arrows
+        for name, text in (("qt_calendar_prevmonth", "‹"),
+                           ("qt_calendar_nextmonth", "›")):
+            btn = self.calendar.findChild(QToolButton, name)
+            if btn:
+                btn.setIcon(QIcon())
+                btn.setText(text)
+                btn.setToolButtonStyle(Qt.ToolButtonTextOnly)
+                btn.setCursor(Qt.PointingHandCursor)
+
+    def styleDateFormats(self):
+        # Header (Sun, Mon, ...)
+        header_fmt = QTextCharFormat()
+        header_fmt.setForeground(QBrush(QColor("#5F6561")))
+        header_fmt.setFontWeight(QFont.DemiBold)
+        self.calendar.setHeaderTextFormat(header_fmt)
+
+        # Remove Qt's default red weekends; use the app's text colour for all days
+        day_fmt = QTextCharFormat()
+        day_fmt.setForeground(QBrush(QColor("#303A36")))
+        for day in (Qt.Monday, Qt.Tuesday, Qt.Wednesday, Qt.Thursday,
+                    Qt.Friday, Qt.Saturday, Qt.Sunday):
+            self.calendar.setWeekdayTextFormat(day, day_fmt)
+
+        # Highlight today in the teal accent
+        today_fmt = QTextCharFormat()
+        today_fmt.setForeground(QBrush(QColor("#0D6B60")))
+        today_fmt.setBackground(QBrush(QColor("#E3F1EE")))
+        today_fmt.setFontWeight(QFont.Bold)
+        self.calendar.setDateTextFormat(QDate.currentDate(), today_fmt)
+
+    def styleCalendar(self):
         self.calendar.setStyleSheet("""
             QCalendarWidget {
                 background-color: #FFFFFF;
@@ -303,86 +266,191 @@ class CalendarPage(QWidget):
 
             QCalendarWidget QWidget {
                 background-color: #FFFFFF;
+                alternate-background-color: #FFFFFF;
                 color: #303A36;
+                border: none;
+                font-family: Nunito;
+            }
+
+            /* Navigation bar */
+            QCalendarWidget QWidget#qt_calendar_navigationbar {
+                background-color: #FFFFFF;
+                border: none;
+                padding: 2px 0px 8px 0px;
             }
 
             QCalendarWidget QToolButton {
-                color: #303A36;
-                background-color: #FFFFFF;
+                color: #1F2421;
+                background-color: transparent;
                 border: none;
-                border-radius: 7px;
-                padding: 6px;
-                font-size: 13px;
-                font-weight: 600;
+                border-radius: 8px;
+                padding: 6px 10px;
+                font-size: 14px;
+                font-weight: 700;
             }
 
             QCalendarWidget QToolButton:hover {
-                background-color: #F4F7F4;
-                color: #168F80;
+                background-color: #E3F1EE;
+                color: #0D6B60;
             }
 
-            QCalendarWidget QToolButton::menu-indicator {
+            QCalendarWidget QToolButton:pressed {
+                background-color: #CFE7E2;
+            }
+
+            /* Prev / next arrows */
+            QCalendarWidget QToolButton#qt_calendar_prevmonth,
+            QCalendarWidget QToolButton#qt_calendar_nextmonth {
+                font-size: 20px;
+                min-width: 28px;
+                padding: 2px 8px;
+            }
+
+            /* Month dropdown: remove the odd arrow */
+            QCalendarWidget QToolButton#qt_calendar_monthbutton::menu-indicator {
                 image: none;
+                width: 0px;
+            }
+
+            QCalendarWidget QMenu {
+                background-color: #FFFFFF;
+                color: #303A36;
+                border: 1px solid #E5E9E6;
+                border-radius: 8px;
+                padding: 4px;
+            }
+
+            QCalendarWidget QMenu::item {
+                padding: 6px 18px;
+                border-radius: 6px;
+            }
+
+            QCalendarWidget QMenu::item:selected {
+                background-color: #E3F1EE;
+                color: #0D6B60;
             }
 
             QCalendarWidget QSpinBox {
                 color: #303A36;
                 background-color: #FFFFFF;
-                border: 1px solid #E1E7E3;
-                border-radius: 5px;
-                padding: 3px;
+                border: 1px solid #E5E9E6;
+                border-radius: 8px;
+                padding: 4px 8px;
+                selection-background-color: #168F80;
             }
 
-            QCalendarWidget QTableView {
+            /* Date grid */
+            QCalendarWidget QAbstractItemView {
                 background-color: #FFFFFF;
                 alternate-background-color: #FFFFFF;
                 selection-background-color: #168F80;
                 selection-color: #FFFFFF;
-                border: none;
                 outline: none;
-                gridline-color: #FFFFFF;
-                font-size: 13px;
-            }
-
-            QCalendarWidget QTableView::item {
                 border: none;
-                padding: 4px;
             }
 
-            QCalendarWidget QTableView::item:hover {
-                background-color: #F4F7F4;
+            QCalendarWidget QAbstractItemView:enabled {
+                color: #303A36;
             }
 
-            QCalendarWidget QHeaderView::section {
-                color: #659B86;
-                background-color: #FFFFFF;
-                border: none;
-                padding: 8px 0;
-                font-size: 11px;
-                font-weight: 600;
+            QCalendarWidget QAbstractItemView:disabled {
+                color: #B8C0BB;
             }
         """)
 
-        self.calendar_view = self.calendar.findChild(QTableView)
+    # ---------------- page styling ----------------
+    # Type scale (Nunito, same as main.py):
+    #   26/800 page title - 19/800 card title - 14/700 placeholder title
+    #   13/400 subtitles  - 12/400 small text - 12/700 buttons
 
-        if self.calendar_view is not None:
-            self.calendar_delegate = CalendarDateDelegate(
-                self.calendar_view
-            )
-            self.calendar_view.setItemDelegate(
-                self.calendar_delegate
-            )
+    def applyStyles(self):
+        self.setStyleSheet("""
+            QWidget#CalendarPage {
+                background-color: #F5F5F3;
+            }
 
-        calendar_layout.addWidget(self.calendar, 1)
+            QWidget#ScheduleCard,
+            QWidget#FeaturesCard {
+                background-color: #FFFFFF;
+                border: 1px solid #E5E9E6;
+                border-radius: 16px;
+            }
 
-        # Add both cards
-        content_layout.addWidget(self.features_card, 4)
-        content_layout.addWidget(self.calendar_card, 6)
+            QLabel {
+                background: transparent;
+                border: none;
+                font-family: Nunito;
+            }
 
-        main_layout.addLayout(content_layout, 1)
+            QLabel#PageTitle {
+                color: #1F2421;
+                font-size: 26px;
+                font-weight: 800;
+            }
 
-        # Buttons
-        self.today_button.clicked.connect(self.go_to_today)
+            QLabel#PageSubtitle {
+                color: #5F6561;
+                font-size: 13px;
+                font-weight: 400;
+            }
+
+            QLabel#CardTitle {
+                color: #1F2421;
+                font-size: 19px;
+                font-weight: 800;
+            }
+
+            QLabel#CardSubtitle {
+                color: #5F6561;
+                font-size: 13px;
+                font-weight: 400;
+            }
+
+            QWidget#Placeholder {
+                background-color: #F5F5F3;
+                border: 1px dashed #D5DED6;
+                border-radius: 12px;
+            }
+
+            QLabel#PlaceholderIcon {
+                color: #168F80;
+                font-size: 30px;
+                font-weight: 700;
+            }
+
+            QLabel#PlaceholderTitle {
+                color: #1F2421;
+                font-size: 14px;
+                font-weight: 700;
+            }
+
+            QLabel#PlaceholderText {
+                color: #777F79;
+                font-size: 12px;
+                font-weight: 400;
+            }
+
+            QPushButton#TodayButton {
+                background-color: #E3F1EE;
+                color: #0D6B60;
+                border: none;
+                border-radius: 10px;
+                padding: 0px 14px;
+                font-family: Nunito;
+                font-size: 12px;
+                font-weight: 700;
+            }
+
+            QPushButton#TodayButton:hover {
+                background-color: #CFE7E2;
+            }
+
+            QPushButton#TodayButton:pressed {
+                background-color: #BFDDD6;
+            }
+        """)
+
+    # ---------------- behaviour ----------------
 
     def go_to_today(self):
         today = QDate.currentDate()

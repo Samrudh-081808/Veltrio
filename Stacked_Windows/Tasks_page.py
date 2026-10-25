@@ -10,6 +10,8 @@ from PyQt5.QtCore import Qt
 
 from PyQt5.QtGui import QColor
 
+from Stacked_Windows.TaskComposer import TaskComposer
+
 
 PALETTE = {
     "background": "#FFFFFF",
@@ -577,4 +579,64 @@ class TasksPage(QWidget):
     # --------------------------------------------------
 
     def add_new_task(self):
-        print("New task button clicked!")
+
+        main_window = self.window()
+
+        self.modal_overlay = QWidget(main_window)
+        self.close_button = QPushButton(self.modal_overlay)
+        VeltrioIcons.apply_stateful(self.close_button, "close")
+        self.close_button.setFixedSize(40, 40)
+        self.close_button.move(
+            self.modal_overlay.width() - 55, 15
+        )
+        self.close_button.clicked.connect(self.modal_overlay.hide)
+        self.modal_overlay.setObjectName("ModalOverlay")
+        self.modal_overlay.setAttribute(Qt.WA_StyledBackground, True)
+        self.modal_overlay.setStyleSheet(
+            "QWidget#ModalOverlay { background-color: rgba(25, 35, 31, 100); }"
+        )
+
+        self.modal_overlay.setGeometry(main_window.rect())
+        self.modal_overlay.raise_()
+        self.modal_overlay.show()
+
+        # Create the composer inside the overlay
+        self.composer = TaskComposer(self.modal_overlay)
+
+        # Set composer's size
+        self.composer.resize(650, 320)
+
+        # Center the composer exactly
+        x = (self.modal_overlay.width() - self.composer.width()) // 2
+        y = (self.modal_overlay.height() - self.composer.height()) // 2
+
+        self.composer.move(x, y)
+        self.composer.show()
+        self.composer.raise_()
+
+        # Place close button to the left
+        self.close_button.move(
+            x - self.close_button.width() - 12,
+            y + 4
+        )
+
+        self.close_button.show()
+        self.close_button.raise_()
+
+
+        self.close_button.setStyleSheet("""
+            QPushButton {
+                background-color: rgba(255, 255, 255, 210);
+                border: 1px solid #E5E9E6;
+                border-radius: 16px;
+            }
+
+            QPushButton:hover {
+                background-color: #E3F1EE;
+                border: 1px solid #168F80;
+            }
+
+            QPushButton:pressed {
+                background-color: #D2E8E2;
+            }
+        """)
