@@ -1,5 +1,6 @@
 from pathlib import Path
 import ctypes
+import sys
 
 from PyQt5.QtCore import (
     Qt,
@@ -153,16 +154,17 @@ class mainWindow(QMainWindow):
         self.setWindowIcon(QIcon(str(icon_path)))
 
         # Windows only: set the title bar color to the app background (#F5F5F3)
-        DWMWA_CAPTION_COLOR = 35
+        if sys.platform == "win32":
+            DWMWA_CAPTION_COLOR = 35
 
-        color = 0x00F3F5F5  # RGB #F5F5F3 in Windows COLORREF format
+            color = 0x00F3F5F5  # RGB #F5F5F3 in Windows COLORREF format
 
-        ctypes.windll.dwmapi.DwmSetWindowAttribute(
-            int(self.winId()),
-            DWMWA_CAPTION_COLOR,
-            ctypes.byref(ctypes.c_int(color)),
-            ctypes.sizeof(ctypes.c_int)
-        )
+            ctypes.windll.dwmapi.DwmSetWindowAttribute(
+                int(self.winId()),
+                DWMWA_CAPTION_COLOR,
+                ctypes.byref(ctypes.c_int(color)),
+                ctypes.sizeof(ctypes.c_int)
+            )
 
         self.initUI()
 
@@ -180,7 +182,7 @@ class mainWindow(QMainWindow):
 
         # Header on top, body (sidebar / main display / right bar) below
         body_hbox = QHBoxLayout()
-        main_vbox.addWidget(Header(), 0)
+        main_vbox.addWidget(Header(), 0)    
         main_vbox.addLayout(body_hbox, 1)
 
         # Sidebar
@@ -198,7 +200,7 @@ class mainWindow(QMainWindow):
 
         # Tasks page
         self.tasks_page = TasksPage()
-
+   
         # Calendar page
         self.calendar_page = CalendarPage()
 
@@ -1552,4 +1554,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    main()  
